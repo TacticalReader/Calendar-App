@@ -15,8 +15,8 @@ Calendar-App/
 ├── .github/workflows/
 │   └── deploy.yml          # GitHub Actions workflow for automated deployment
 ├── calender-app/            # Main React+Vite application
-│   ├── src/
-│   ├── package.json        # Dependencies and scripts
+│   ├──-------------------------------src/components 
+│   ├── package.json # Dependencies and scripts   └── components.jsx and component.css
 │   ├── vite.config.js      # Vite configuration with GitHub Pages base path
 │   └── ...
 ├── LICENSE
