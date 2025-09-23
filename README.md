@@ -6,6 +6,8 @@ A React+Vite Calendar Application deployed on GitHub Pages.
 
 🚀 **[View Live App](https://tacticalreader.github.io/Calendar-App/)**
 
+#Media-Query still in devlopment 1 weeks later 
+
 ## Project Structure
 
 ```
