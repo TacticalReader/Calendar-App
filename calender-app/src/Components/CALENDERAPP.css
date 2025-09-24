@@ -388,3 +388,25 @@ color: #fff;
 
 
 }
+
+@media (max-width: 500px) {
+  .calender-app{
+    aspect-ratio: 10/9;
+  }
+  .calender {
+    width: 100%;
+  }
+  .event-popup{
+    top: 23%;
+    width: 80%;
+  }
+  .events{
+    width: 100%;
+  }
+} 
+
+@media (max-width: 350px) {
+  .calender-app{
+    aspect-ratio: 3/2;
+  }
+}     
