@@ -1,105 +1,109 @@
+
 # Calendar-App
 
-A React+Vite Calendar Application deployed on GitHub Pages.
+**A modern, responsive Calendar Application built with React (v19) + Vite, featuring event creation, editing, deletion, and sleek UI. Effortlessly deployed with GitHub Actions to GitHub Pages.**
 
-## Live Demo
+[🚀 Live Demo](https://tacticalreader.github.io/Calendar-App/)
 
-🚀 **[View Live App](https://tacticalreader.github.io/Calendar-App/)**
+***
 
-#Media-Query still in devlopment 1 weeks later 
+## Features
+
+- **Monthly calendar view** with intuitive day grid
+- **Add, edit & delete events** for any date (with time and notes)
+- **Navigable months/years** (seamlessly move backwards or forwards)
+- **Sorting of events** in chronological order
+- **Event popup modal** optimized for accessibility
+- **Responsive & modern design:** CSS with custom fonts, flexible layouts, and support for mobile/tablet/desktop
+- **State management** with React hooks (`useState`)
+- **All client-side, no backend required**
+- **Deployed and updated automatically** on push via GitHub Actions
+
+***
 
 ## Project Structure
 
 ```
 Calendar-App/
 ├── .github/workflows/
-│   └── deploy.yml          # GitHub Actions workflow for automated deployment
-├── calender-app/            # Main React+Vite application
-│   ├──-------------------------------src/components 
-│   ├── package.json # Dependencies and scripts   └── components.jsx and component.css
-│   ├── vite.config.js      # Vite configuration with GitHub Pages base path
+│   └── deploy.yml           # GitHub Actions for CI/CD deployment
+├── calender-app/            # Main React + Vite application
+│   ├── src/
+│   │   ├── Components/
+│   │   │   ├── CALENDERAPP.jsx
+│   │   │   └── CALENDERAPP.css
+│   │   ├── App.jsx
+│   │   ├── App.css
+│   │   ├── main.jsx
+│   │   └── index.css
+│   ├── package.json
+│   ├── vite.config.js
 │   └── ...
 ├── LICENSE
 └── README.md
 ```
 
-## Deployment Guide
+***
 
-This React+Vite app is configured for deployment to GitHub Pages using two methods:
+## Getting Started
 
-### Method 1: Automated Deployment (Recommended) 🤖
+### Prerequisites
 
-The repository is configured with **GitHub Actions** for automatic deployment:
+- Node.js 18+
+- npm 6+
 
-- **Trigger**: Every push to the `main` branch
-- **Workflow**: `.github/workflows/deploy.yml`
-- **Process**: Builds the app and deploys to `gh-pages` branch
-- **URL**: https://tacticalreader.github.io/Calendar-App/
+### Clone & Local Development
 
-#### How it Works:
-1. Push changes to the `main` branch
-2. GitHub Actions automatically triggers the workflow
-3. The workflow builds the React+Vite app from `/calender-app/` directory
-4. Deploys the built files to the `gh-pages` branch
-5. GitHub Pages serves the app from the `gh-pages` branch
-
-### Method 2: Manual Deployment 🛠️
-
-For manual deployment using the `gh-pages` package:
-
-#### Prerequisites
 ```bash
-node -v   # Node.js 18+ required
-npm -v    # npm 6+ required
-```
-
-#### Installation & Setup
-```bash
-# Clone the repository
 git clone https://github.com/TacticalReader/Calendar-App.git
 cd Calendar-App/calender-app
-
-# Install dependencies
 npm install
-
-# Install gh-pages globally (optional)
-npm install -g gh-pages
+npm run dev  # Local dev server at http://localhost:5173
 ```
 
-#### Build and Deploy
+***
+
+## Deployment
+
+### 1. Automated (Recommended)
+
+This repo includes a GitHub Actions workflow that **automatically builds and deploys** the app to GitHub Pages whenever you push to `main`.
+
+#### How it works
+
+- On every push to `main`, `.github/workflows/deploy.yml`:
+  - Installs dependencies
+  - Builds your app (`/calender-app`)
+  - Deploys `dist/` to the `gh-pages` branch
+- GitHub Pages serves from `gh-pages` branch ([view live](https://tacticalreader.github.io/Calendar-App/))
+
+### 2. Manual (with gh-pages)
+
 ```bash
-# Build the application
-npm run build
-
-# Deploy to GitHub Pages
-npm run deploy
+cd Calendar-App/calender-app
+npm install
+npm run build         # Builds app to /dist
+npm run deploy        # Deploys using gh-pages
 ```
 
-#### Available Scripts
-In the `/calender-app/` directory:
+***
 
-```bash
-npm run dev        # Start development server
-npm run build      # Build for production
-npm run preview    # Preview production build
-npm run predeploy  # Build before deploy (runs automatically)
-npm run deploy     # Deploy to GitHub Pages
-```
+## Configuration
 
-## Configuration Files
+### vite.config.js
 
-### `vite.config.js`
 ```javascript
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 
 export default defineConfig({
   plugins: [react()],
-  base: '/Calendar-App/',  // GitHub Pages base path
+  base: '/Calendar-App/', // Required for GitHub Pages
 })
 ```
 
-### `package.json` (Key Sections)
+### package.json (Deployment scripts)
+
 ```json
 {
   "homepage": "https://tacticalreader.github.io/Calendar-App/",
@@ -107,101 +111,72 @@ export default defineConfig({
     "predeploy": "npm run build",
     "deploy": "gh-pages -d dist"
   },
-  "devDependencies": {
-    "gh-pages": "^6.1.1"
-  }
+  ...
 }
 ```
 
-## GitHub Pages Setup
+***
 
-### Repository Settings
-1. Go to **Settings** → **Pages**
-2. **Source**: Deploy from a branch
-3. **Branch**: `gh-pages` (auto-created by deployment)
-4. **Folder**: `/ (root)`
+## Customization & Extending
 
-### Custom Domain (Optional)
-To use a custom domain:
-1. Add a `CNAME` file to the `public/` directory
-2. Configure DNS settings with your domain provider
-3. Update the `homepage` field in `package.json`
+- **Add features:** Extend `CALENDERAPP.jsx` for reminders, recurring events, or notifications.
+- **Styling:** Edit `CALENDERAPP.css` for branding/theme changes.
+- **Deployment:** For a custom domain, add a `CNAME` file to `public/` and update `homepage` in `package.json`.
+
+***
 
 ## Troubleshooting
 
-### Common Issues
+- **Blank page after deployment?**
+  - Check `base: '/Calendar-App/'` in `vite.config.js`
+  - Ensure `homepage` matches repo in `package.json`
+- **Workflow fails?**
+  - Confirm `.github/workflows/deploy.yml` path
+  - GitHub Pages must be enabled in repo Settings
+- **Build errors?**
+  - Node.js should be v18+; run `node -v`
+  - Clear cache: `npm cache clean --force`
+  - Reinstall: `rm -rf node_modules package-lock.json && npm install`
 
-**❌ App shows blank page after deployment**
-- Ensure `base: '/Calendar-App/'` is set in `vite.config.js`
-- Check that `homepage` in `package.json` matches the repository name
-
-**❌ GitHub Actions workflow fails**
-- Verify the workflow file path: `.github/workflows/deploy.yml`
-- Check that GitHub Pages is enabled in repository settings
-- Ensure the workflow has proper permissions (should be automatic)
-
-**❌ Manual deployment fails**
-```bash
-# Clear npm cache
-npm cache clean --force
-
-# Reinstall dependencies
-rm -rf node_modules package-lock.json
-npm install
-
-# Try deploying again
-npm run deploy
-```
-
-**❌ Build errors**
-```bash
-# Check Node.js version
-node -v  # Should be 18+
-
-# Update dependencies
-npm update
-
-# Clear Vite cache
-npx vite --force
-```
-
-### Build Process Details
-
-1. **Development**: `npm run dev`
-   - Starts Vite dev server at `http://localhost:5173`
-   - Hot reload enabled
-
-2. **Production Build**: `npm run build`
-   - Creates optimized build in `/dist/` directory
-   - Assets are prefixed with `/Calendar-App/` for GitHub Pages
-
-3. **Deployment**: `npm run deploy`
-   - Runs `npm run build` automatically
-   - Pushes `/dist/` contents to `gh-pages` branch
-   - GitHub Pages serves from `gh-pages` branch
-
-## Development
-
-```bash
-cd calender-app
-npm install
-npm run dev
-```
+***
 
 ## Technologies Used
 
-- **React 19.1.1** - UI library
-- **Vite 7.1.6** - Build tool and dev server
-- **GitHub Actions** - CI/CD for automated deployment
-- **GitHub Pages** - Static site hosting
-- **gh-pages** - Manual deployment tool
+- **React 19.1.1** (UI Library)
+- **Vite 7.1.6** (Lightning-fast dev/build)
+- **GitHub Actions** (CI/CD for automatic deployment)
+- **GitHub Pages** (Static hosting)
+- **gh-pages npm package** (Manual deployment support)
+
+***
 
 ## License
 
-Apache-2.0 License - see the [LICENSE](LICENSE) file for details.
+Apache-2.0 License — see LICENSE file for details.
 
----
+***
 
-**Happy coding! 🎉**
+## Contributing
 
-For issues or questions, please open an issue in this repository.
+Pull requests and issues are welcome! For major changes, please open an issue first to discuss what you would like to change or improve.
+
+***
+
+## Author
+
+Made by [TacticalReader](https://github.com/TacticalReader)
+
+***
+
+## Screenshots
+
+> _screenshot_
+
+***
+
+**Happy coding!** 🎉
+
+***
+
+[1](https://github.com/TacticalReader/Calendar-App)
+[2](https://tacticalreader.github.io/Calendar-App/)
