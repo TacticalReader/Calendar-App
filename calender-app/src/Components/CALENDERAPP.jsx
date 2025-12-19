@@ -56,8 +56,7 @@ const CALENDERAPP = () => {
     }
   };
 
-  const handleDateClick = (day) => {
-    const clickedDate = new Date(currentDate.getFullYear(), currentDate.getMonth(), day);
+  const handleDateClick = (clickedDate) => {
     if (clickedDate < new Date(today.toDateString())) return;
 
     setSelectedDate(clickedDate);
@@ -182,7 +181,7 @@ const CALENDERAPP = () => {
           <span
             key={day + 1}
             className={`${isCurrentDay ? 'current-day' : ''} ${hasEvent ? 'has-event' : ''}`}
-            onClick={() => handleDateClick(day + 1)}
+            onClick={() => handleDateClick(date)}
           >
             {day + 1}
           </span>
@@ -200,7 +199,7 @@ const CALENDERAPP = () => {
         <span
           key={index}
           className={`${isCurrentDay ? 'current-day' : ''} ${hasEvent ? 'has-event' : ''}`}
-          onClick={() => handleDateClick(day.getDate())}
+          onClick={() => handleDateClick(day)}
         >
           {day.getDate()}
         </span>
