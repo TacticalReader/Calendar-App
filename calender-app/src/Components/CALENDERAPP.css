@@ -163,14 +163,6 @@
     overflow-y: auto;
 }
 
-.day-view .calender {
-  display: none;
-}
-
-.day-view .events {
-  width: 100%;
-}
-
 .event-popup{
     position: absolute;
     top: 38%;
