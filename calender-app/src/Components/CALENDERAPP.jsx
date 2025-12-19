@@ -10,9 +10,19 @@ const CALENDERAPP = () => {
   const [view, setView] = useState('month'); // 'month', 'week', 'day'
 
   const [showEventPopup, setShowEventPopup] = useState(false);
-  const [eventTime, setEventTime] = useState("00:00");
   const [eventText, setEventText] = useState('');
   const [editingEvent, setEditingEvent] = useState(null);
+
+  // Time Picker State (UI only)
+  const [timeHours, setTimeHours] = useState("12");
+  const [timeMinutes, setTimeMinutes] = useState("00");
+  const [timePeriod, setTimePeriod] = useState("AM");
+
+  // History & Notification State
+  const [past, setPast] = useState([]);
+  const [future, setFuture] = useState([]);
+  const [toast, setToast] = useState(null);
+  const [showSettings, setShowSettings] = useState(false);
 
   const [events, setEvents] = useState(() => {
     try {
@@ -25,13 +35,52 @@ const CALENDERAPP = () => {
       }
     } catch (error) {
       console.error("Failed to parse events from localStorage", error);
-    }
-    return [];
+    }র্শreturn [];
   });
 
   useEffect(() => {
     localStorage.setItem('calendarEvents', JSON.stringify(events));
   }, [events]);
+
+  // Helper: Format 24h to 12h for display
+  const formatTime = (timeString) => {
+    if (!timeString) return "";
+    const [h, m] = timeString.split(':');
+    let hours = parseInt(h);
+    const minutes = m;
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    return `${hours}:${minutes} ${ampm}`;
+  };
+
+  // Helper: Parse 24h to UI state
+  const parseTimeForUI = (timeString) => {
+    const [h, m] = timeString.split(':');
+    let hours = parseInt(h);
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+    setTimeHours(hours.toString().padStart(2, '0'));
+    setTimeMinutes(m);
+    setTimePeriod(ampm);
+  };
+
+  // Core State Manager with History
+  const saveEvents = (newEvents) => {
+    setPast(prev => [...prev, events]);
+    setEvents(newEvents);
+    setFuture([]);
+  };
+
+  const handleUndo = () => {
+    if (past.length === 0) return;
+    const previousEvents = past[past.length - 1];
+    const newPast = past.slice(0, -1);
+    setPast(newPast);
+    setEvents(previousEvents);
+    setToast(null);
+  };
 
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
@@ -61,7 +110,10 @@ const CALENDERAPP = () => {
 
     setSelectedDate(clickedDate);
     setShowEventPopup(true);
-    setEventTime("00:00");
+    // Reset time picker to default 12:00 AM
+    setTimeHours("12");
+    setTimeMinutes("00");
+    setTimePeriod("AM");
     setEventText("");
     setEditingEvent(null);
   }
@@ -76,10 +128,17 @@ const CALENDERAPP = () => {
 
   const handleEventSubmit = () => {
     if (!eventText) return;
+
+    // Convert UI 12h time to 24h for storage
+    let h = parseInt(timeHours);
+    if (timePeriod === 'PM' && h !== 12) h += 12;
+    if (timePeriod === 'AM' && h === 12) h = 0;
+    const time24 = `${h.toString().padStart(2, '0')}:${timeMinutes}`;
+
     const newEvent = {
       id: editingEvent ? editingEvent.id : Date.now(),
       date: selectedDate,
-      time: eventTime,
+      time: time24,
       text: eventText
     }
 
@@ -94,7 +153,7 @@ const CALENDERAPP = () => {
 
     updatedEvents.sort((a, b) => new Date(a.date).setHours(a.time.split(':')[0], a.time.split(':')[1]) - new Date(b.date).setHours(b.time.split(':')[0], b.time.split(':')[1]));
 
-    setEvents(updatedEvents);
+    saveEvents(updatedEvents);
     setShowEventPopup(false);
     setEventText("");
     setEditingEvent(null);
@@ -102,19 +161,60 @@ const CALENDERAPP = () => {
 
   const handleEditEvent = (event) => {
     setSelectedDate(new Date(event.date));
-    setEventTime(event.time);
+    parseTimeForUI(event.time);
     setEventText(event.text);
     setEditingEvent(event);
     setShowEventPopup(true);
   }
 
   const handleDeleteEvent = (eventId) => {
-    setEvents(events.filter(event => event.id !== eventId));
+    const eventToDelete = events.find(e => e.id === eventId);
+    const newEvents = events.filter(event => event.id !== eventId);
+    saveEvents(newEvents);
+    
+    setToast({
+      message: `${eventToDelete?.text || 'Event'} deleted`,
+      visible: true
+    });
+    
+    // Auto hide toast
+    setTimeout(() => {
+      setToast(prev => (prev && prev.message.includes('deleted') ? null : prev));
+    }, 5000);
   }
 
-  const handleTimeChange = (e) => {
-    setEventTime(e.target.value);
-  }
+  const handleExport = () => {
+    const dataStr = JSON.stringify(events, null, 2);
+    const blob = new Blob([dataStr], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = "calendar_backup.json";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  const handleImport = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const importedEvents = JSON.parse(event.target.result).map(ev => ({
+          ...ev,
+          date: new Date(ev.date)
+        }));
+        saveEvents(importedEvents);
+        setShowSettings(false);
+        alert("Calendar restored successfully!");
+      } catch (err) {
+        console.error(err);
+        alert("Failed to restore backup. Invalid file.");
+      }
+    };
+    reader.readAsText(file);
+  };
 
   const getWeekDays = (date) => {
     const week = [];
@@ -205,12 +305,24 @@ const CALENDERAPP = () => {
       <div className="calender">
         <div className="calender-header">
           <h1 className="heading">Calendar</h1>
-          <div className="view-switcher">
+          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+            <span className="saved-indicator">
+              <i className='bx bx-check-circle'></i> Saved to browser
+            </span>
+            <button className="settings-btn" onClick={() => setShowSettings(true)} title="Data Management">
+              <i className='bx bx-cog'></i>
+            </button>
+          </div>
+        </div>
+        
+        <div className="calender-header">
+           <div className="view-switcher">
             <button onClick={() => setView('month')} className={view === 'month' ? 'active' : ''}>Month</button>
             <button onClick={() => setView('week')} className={view === 'week' ? 'active' : ''}>Week</button>
             <button onClick={() => setView('day')} className={view === 'day' ? 'active' : ''}>Day</button>
           </div>
         </div>
+
         <div className="nevigate-date">
           <h2>{renderHeader()}</h2>
           <div className="buttons">
@@ -235,14 +347,26 @@ const CALENDERAPP = () => {
           <div className="event-popup">
             <div className="time-input">
               <div className="event-popup-time">Time</div>
+              {/* Custom 12-Hour Time Picker */}
               <input 
-                type="time" 
-                name="time" 
-                className="event-time-input" 
-                value={eventTime} 
-                onChange={handleTimeChange} 
-                aria-label="Event Time"
+                type="number" 
+                min="1" max="12" 
+                value={timeHours} 
+                onChange={(e) => setTimeHours(e.target.value)} 
+                placeholder="HH"
               />
+              <span>:</span>
+              <input 
+                type="number" 
+                min="0" max="59" 
+                value={timeMinutes} 
+                onChange={(e) => setTimeMinutes(e.target.value.padStart(2, '0'))} 
+                placeholder="MM"
+              />
+              <select value={timePeriod} onChange={(e) => setTimePeriod(e.target.value)}>
+                <option value="AM">AM</option>
+                <option value="PM">PM</option>
+              </select>
             </div>
             <textarea 
               placeholder="Enter Event Text (Maximum 60 characters)" 
@@ -264,7 +388,7 @@ const CALENDERAPP = () => {
               <div className="event-date">
                 {`${monthsOfYear[event.date.getMonth()]} ${event.date.getDate()}, ${event.date.getFullYear()}`}
               </div>
-              <div className="event-time">{event.time}</div>
+              <div className="event-time">{formatTime(event.time)}</div>
             </div>
             <div className="event-text">{event.text}</div>
             <div className="event-buttons">
@@ -274,6 +398,33 @@ const CALENDERAPP = () => {
           </div>
         ))}
       </div>
+
+      {/* Toast Notification */}
+      {toast && (
+        <div className="toast-notification" role="status" aria-live="polite">
+          <span>{toast.message}</span>
+          <button className="toast-undo-btn" onClick={handleUndo}>UNDO</button>
+        </div>
+      )}
+
+      {/* Settings Modal */}
+      {showSettings && (
+        <div className="settings-overlay">
+          <div className="settings-modal">
+            <h2>Data Management</h2>
+            <div className="settings-actions">
+              <button className="settings-btn-action" onClick={handleExport}>
+                <i className='bx bxs-download'></i> Download Calendar (.json)
+              </button>
+              <label className="settings-btn-action">
+                <i className='bx bxs-file-import'></i> Restore from Backup
+                <input type="file" accept=".json" onChange={handleImport} style={{ display: 'none' }} />
+              </label>
+            </div>
+            <button className="settings-close" onClick={() => setShowSettings(false)}>Close</button>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
