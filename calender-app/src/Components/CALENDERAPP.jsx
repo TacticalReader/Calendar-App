@@ -10,7 +10,7 @@ const CALENDERAPP = () => {
   const [view, setView] = useState('month'); // 'month', 'week', 'day'
 
   const [showEventPopup, setShowEventPopup] = useState(false);
-  const [eventTime, setEventTime] = useState({ hours: '00', minutes: "00" });
+  const [eventTime, setEventTime] = useState("00:00");
   const [eventText, setEventText] = useState('');
   const [editingEvent, setEditingEvent] = useState(null);
 
@@ -61,7 +61,7 @@ const CALENDERAPP = () => {
 
     setSelectedDate(clickedDate);
     setShowEventPopup(true);
-    setEventTime({ hours: '00', minutes: "00" });
+    setEventTime("00:00");
     setEventText("");
     setEditingEvent(null);
   }
@@ -79,7 +79,7 @@ const CALENDERAPP = () => {
     const newEvent = {
       id: editingEvent ? editingEvent.id : Date.now(),
       date: selectedDate,
-      time: `${String(eventTime.hours).padStart(2, '0')}:${String(eventTime.minutes).padStart(2, '0')}`,
+      time: eventTime,
       text: eventText
     }
 
@@ -102,10 +102,7 @@ const CALENDERAPP = () => {
 
   const handleEditEvent = (event) => {
     setSelectedDate(new Date(event.date));
-    setEventTime({
-      hours: event.time.split(':')[0],
-      minutes: event.time.split(':')[1]
-    });
+    setEventTime(event.time);
     setEventText(event.text);
     setEditingEvent(event);
     setShowEventPopup(true);
@@ -116,11 +113,7 @@ const CALENDERAPP = () => {
   }
 
   const handleTimeChange = (e) => {
-    const { name, value } = e.target;
-    let numValue = Math.max(0, parseInt(value, 10) || 0);
-    if (name === 'hours') numValue = Math.min(23, numValue);
-    if (name === 'minutes') numValue = Math.min(59, numValue);
-    setEventTime((prevTime) => ({ ...prevTime, [name]: String(numValue).padStart(2, '0') }));
+    setEventTime(e.target.value);
   }
 
   const getWeekDays = (date) => {
@@ -242,14 +235,21 @@ const CALENDERAPP = () => {
           <div className="event-popup">
             <div className="time-input">
               <div className="event-popup-time">Time</div>
-              <input type="number" name="hours" min={0} max={23} className="hours" value={eventTime.hours} onChange={handleTimeChange} />
-              <input type="number" name="minutes" min={0} max={59} className="minutes" value={eventTime.minutes} onChange={handleTimeChange} />
+              <input 
+                type="time" 
+                name="time" 
+                className="event-time-input" 
+                value={eventTime} 
+                onChange={handleTimeChange} 
+                aria-label="Event Time"
+              />
             </div>
-            <textarea placeholder="Enter Event Text (Maximum 60 characters)" value={eventText} onChange={(e) => {
-              if (e.target.value.length <= 60) {
-                setEventText(e.target.value)
-              }
-            }} ></textarea>
+            <textarea 
+              placeholder="Enter Event Text (Maximum 60 characters)" 
+              value={eventText} 
+              maxLength={60}
+              onChange={(e) => setEventText(e.target.value)} 
+            ></textarea>
             <button className="event-popup-btn" onClick={handleEventSubmit}>
               {editingEvent ? 'Update Event' : 'Add Event'}
             </button>
