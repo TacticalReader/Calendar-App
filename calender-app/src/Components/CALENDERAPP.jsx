@@ -89,6 +89,66 @@ const CALENDERAPP = () => {
     setFuture([]);
   };
 
+  // Notification Permission Request
+  const requestNotificationPermission = async () => {
+    if (!("Notification" in window)) {
+      alert("This browser does not support desktop notification");
+      return;
+    }
+    const permission = await Notification.requestPermission();
+    if (permission === "granted") {
+      setToast({ message: "Notifications enabled!", visible: true });
+      new Notification("Calendar App", { body: "You will now receive alerts for upcoming events." });
+    } else {
+      setToast({ message: "Permission denied", visible: true });
+    }
+  };
+
+  // Notification Checker Effect
+  useEffect(() => {
+    if (!("Notification" in window) || Notification.permission !== "granted") return;
+
+    const checkEvents = () => {
+      const now = new Date();
+      const upcomingEvents = events.filter(event => {
+        // Skip if already notified
+        if (event.notified) return false;
+
+        const eventDate = new Date(event.date);
+        const [hours, minutes] = event.time.split(':').map(Number);
+        eventDate.setHours(hours, minutes, 0, 0);
+
+        const timeDiff = eventDate.getTime() - now.getTime();
+        // Notify if within 10 minutes (600000 ms) and in the future
+        return timeDiff > 0 && timeDiff <= 600000;
+      });
+
+      if (upcomingEvents.length > 0) {
+        upcomingEvents.forEach(event => {
+          new Notification("Upcoming Event", {
+            body: `${event.text} at ${formatTime(event.time)}`,
+            icon: "/favicon.ico"
+          });
+        });
+
+        // Mark as notified without adding to history (using functional update on setEvents directly)
+        // We do NOT call saveEvents here to avoid polluting the Undo history with system updates
+        setEvents(prevEvents => 
+          prevEvents.map(ev => 
+            upcomingEvents.find(up => up.id === ev.id) 
+              ? { ...ev, notified: true } 
+              : ev
+          )
+        );
+      }
+    };
+
+    const intervalId = setInterval(checkEvents, 60000); // Check every minute
+    checkEvents(); // Initial check
+
+    return () => clearInterval(intervalId);
+  }, [events]);
+
   const handleUndo = () => {
     if (past.length === 0) return;
     const previousEvents = past[past.length - 1];
@@ -171,7 +231,8 @@ const CALENDERAPP = () => {
       id: editingEvent ? editingEvent.id : Date.now(),
       date: selectedDate,
       time: time24,
-      text: eventText
+      text: eventText,
+      notified: false // Reset notification status on create/update
     }
 
     let updatedEvents;
@@ -474,6 +535,9 @@ const CALENDERAPP = () => {
               <i className='bx bx-check-circle'></i> Saved to browser
             </div>
             <div className="settings-actions">
+              <button className="settings-btn-action" onClick={requestNotificationPermission}>
+                <i className='bx bxs-bell-ring'></i> Enable Notifications
+              </button>
               <button className="settings-btn-action" onClick={handleExport}>
                 <i className='bx bxs-download'></i> Download Calendar (.json)
               </button>
