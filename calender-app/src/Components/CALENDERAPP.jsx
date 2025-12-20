@@ -20,6 +20,8 @@ const CALENDERAPP = () => {
 
   // History & Notification State
   const [past, setPast] = useState([]);
+  // Future state reserved for potential Redo functionality
+  // eslint-disable-next-line no-unused-vars
   const [future, setFuture] = useState([]);
   const [toast, setToast] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
@@ -35,12 +37,23 @@ const CALENDERAPP = () => {
       }
     } catch (error) {
       console.error("Failed to parse events from localStorage", error);
-    }র্শreturn [];
+    }
+    return [];
   });
 
   useEffect(() => {
     localStorage.setItem('calendarEvents', JSON.stringify(events));
   }, [events]);
+
+  // Toast Timer Management
+  useEffect(() => {
+    if (toast) {
+      const timer = setTimeout(() => {
+        setToast(null);
+      }, 5000);
+      return () => clearTimeout(timer);
+    }
+  }, [toast]);
 
   // Helper: Format 24h to 12h for display
   const formatTime = (timeString) => {
@@ -126,6 +139,18 @@ const CALENDERAPP = () => {
     );
   }
 
+  const handleTimeBlur = () => {
+    let h = parseInt(timeHours) || 12;
+    if (h < 1) h = 1;
+    if (h > 12) h = 12;
+    setTimeHours(h.toString().padStart(2, '0'));
+
+    let m = parseInt(timeMinutes) || 0;
+    if (m < 0) m = 0;
+    if (m > 59) m = 59;
+    setTimeMinutes(m.toString().padStart(2, '0'));
+  };
+
   const handleEventSubmit = () => {
     if (!eventText) return;
 
@@ -151,8 +176,6 @@ const CALENDERAPP = () => {
       updatedEvents = [...events, newEvent];
     }
 
-    updatedEvents.sort((a, b) => new Date(a.date).setHours(a.time.split(':')[0], a.time.split(':')[1]) - new Date(b.date).setHours(b.time.split(':')[0], b.time.split(':')[1]));
-
     saveEvents(updatedEvents);
     setShowEventPopup(false);
     setEventText("");
@@ -176,11 +199,6 @@ const CALENDERAPP = () => {
       message: `${eventToDelete?.text || 'Event'} deleted`,
       visible: true
     });
-    
-    // Auto hide toast
-    setTimeout(() => {
-      setToast(prev => (prev && prev.message.includes('deleted') ? null : prev));
-    }, 5000);
   }
 
   const handleExport = () => {
@@ -229,10 +247,25 @@ const CALENDERAPP = () => {
   };
 
   const filteredEvents = useMemo(() => {
+    let filtered = [];
     if (view === 'day') {
-      return events.filter(event => isSameDay(event.date, currentDate));
+      filtered = events.filter(event => isSameDay(event.date, currentDate));
+    } else {
+      filtered = [...events];
     }
-    return events.sort((a, b) => new Date(a.date) - new Date(b.date));
+
+    return filtered.sort((a, b) => {
+      const dateA = new Date(a.date);
+      const dateB = new Date(b.date);
+      
+      // Compare dates (ignoring time component of the Date object itself, which is usually 00:00)
+      if (dateA.getTime() !== dateB.getTime()) {
+        return dateA - dateB;
+      }
+      
+      // If dates are same, compare time strings
+      return a.time.localeCompare(b.time);
+    });
   }, [view, events, currentDate]);
 
   const renderHeader = () => {
@@ -353,6 +386,7 @@ const CALENDERAPP = () => {
                 min="1" max="12" 
                 value={timeHours} 
                 onChange={(e) => setTimeHours(e.target.value)} 
+                onBlur={handleTimeBlur}
                 placeholder="HH"
               />
               <span>:</span>
@@ -360,7 +394,8 @@ const CALENDERAPP = () => {
                 type="number" 
                 min="0" max="59" 
                 value={timeMinutes} 
-                onChange={(e) => setTimeMinutes(e.target.value.padStart(2, '0'))} 
+                onChange={(e) => setTimeMinutes(e.target.value)} 
+                onBlur={handleTimeBlur}
                 placeholder="MM"
               />
               <select value={timePeriod} onChange={(e) => setTimePeriod(e.target.value)}>
