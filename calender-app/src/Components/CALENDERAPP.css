@@ -1,13 +1,3 @@
-.layout-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 100vh;
-  width: 100%;
-  padding: 2rem 0;
-}
-
 .calender-app {
   width: 60%;
   min-width: 90vmin;
@@ -207,8 +197,7 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    flex: 1;
-    width: 100%;
+    height: 100%;
     color: #78879e;
     gap: 1rem;
 }
@@ -532,40 +521,6 @@
     border-radius: 1rem;
     cursor: pointer;
     margin-top: 1rem;
-}
-
-/* Credits Section */
-.credits {
-    margin-top: 15rem;
-    padding: 2rem 1rem;
-    text-align: center;
-    color: #78879e;
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 0.5rem;
-}
-
-.credits-text {
-    font-family: 'Brush Script MT', 'cursive';
-    font-size: 1.6rem;
-    color: #fff;
-}
-
-.credits-github {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0.8rem;
-    font-family: "Bebas Neue", sans-serif;
-    color: #ef9011;
-    font-size: 1.4rem;
-    letter-spacing: 0.1rem;
-}
-
-.credits-github i {
-    font-size: 1.8rem;
 }
 
 @media (max-width: 850px) {
