@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 
 const CALENDERAPP = () => {
   const daysofWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -8,6 +8,9 @@ const CALENDERAPP = () => {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
+  const appRef = useRef(null);
+  const gridRef = useRef(null);
+
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [view, setView] = useState('month'); // 'month', 'week', 'day'
@@ -15,6 +18,12 @@ const CALENDERAPP = () => {
   const [showEventPopup, setShowEventPopup] = useState(false);
   const [eventText, setEventText] = useState('');
   const [editingEvent, setEditingEvent] = useState(null);
+
+  // Animation States
+  const [isAnimating, setIsAnimating] = useState(false);
+  const [direction, setDirection] = useState('forward'); // 'forward' | 'backward'
+  const [containerHeight, setContainerHeight] = useState('auto');
+  const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
 
   // Time Picker State (UI only)
   const [timeHours, setTimeHours] = useState("12");
@@ -47,6 +56,13 @@ const CALENDERAPP = () => {
   useEffect(() => {
     localStorage.setItem('calendarEvents', JSON.stringify(events));
   }, [events]);
+
+  // Measure grid height for smooth transition
+  useEffect(() => {
+    if (gridRef.current) {
+      setContainerHeight(`${gridRef.current.scrollHeight}px`);
+    }
+  }, [currentDate, view, isAnimating]);
 
   // Toast Timer Management
   useEffect(() => {
@@ -131,8 +147,6 @@ const CALENDERAPP = () => {
           });
         });
 
-        // Mark as notified without adding to history (using functional update on setEvents directly)
-        // We do NOT call saveEvents here to avoid polluting the Undo history with system updates
         setEvents(prevEvents => 
           prevEvents.map(ev => 
             upcomingEvents.find(up => up.id === ev.id) 
@@ -161,36 +175,55 @@ const CALENDERAPP = () => {
   const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
   const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
 
-  const handlePrev = () => {
+  const changeDate = (amount) => {
     if (view === 'month') {
-      setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() - 1, 1));
+      setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + amount, 1));
     } else if (view === 'week') {
-      setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() - 7));
+      setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() + (amount * 7)));
     } else {
-      setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() - 1));
+      setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() + amount));
     }
   };
 
+  const handlePrev = () => {
+    if (isAnimating) return;
+    setDirection('backward');
+    setIsAnimating(true);
+    setTimeout(() => {
+      changeDate(-1);
+      setIsAnimating(false);
+    }, 300);
+  };
+
   const handleNext = () => {
-    if (view === 'month') {
-      setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + 1, 1));
-    } else if (view === 'week') {
-      setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() + 7));
-    } else {
-      setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth(), prev.getDate() + 1));
-    }
+    if (isAnimating) return;
+    setDirection('forward');
+    setIsAnimating(true);
+    setTimeout(() => {
+      changeDate(1);
+      setIsAnimating(false);
+    }, 300);
   };
 
   const handleGotoToday = () => {
     setCurrentDate(new Date());
   };
 
-  const handleDateClick = (clickedDate) => {
+  const handleDateClick = (clickedDate, e) => {
     // Normalize clicked date to midnight for comparison
     const normalizedDate = new Date(clickedDate);
     normalizedDate.setHours(0, 0, 0, 0);
 
     if (normalizedDate < today) return;
+
+    // Calculate transform origin for popup
+    if (appRef.current && e.target) {
+        const appRect = appRef.current.getBoundingClientRect();
+        const cellRect = e.target.getBoundingClientRect();
+        const x = cellRect.left - appRect.left + (cellRect.width / 2);
+        const y = cellRect.top - appRect.top + (cellRect.height / 2);
+        setPopupPosition({ x, y });
+    }
 
     setSelectedDate(normalizedDate);
     setShowEventPopup(true);
@@ -260,6 +293,13 @@ const CALENDERAPP = () => {
     setEventText(event.text);
     setEditingEvent(event);
     setShowEventPopup(true);
+    // Reset popup position to center or default if triggered from list
+    // Or we could try to find the day cell, but for list edit, default center is fine.
+    // We'll leave popupPosition as is, or reset it if we want center behavior.
+    // Since the popup is absolute, if we don't set origin, it defaults to center of element.
+    // But we are setting transform-origin inline. Let's reset it to center for list edits.
+    setPopupPosition({ x: 0, y: 0 }); // 0,0 might be top-left. 
+    // Actually, if we want default animation for list edit, we might skip the inline style.
   }
 
   const handleDeleteEvent = (eventId) => {
@@ -330,12 +370,9 @@ const CALENDERAPP = () => {
       const dateA = new Date(a.date);
       const dateB = new Date(b.date);
       
-      // Compare dates (ignoring time component of the Date object itself, which is usually 00:00)
       if (dateA.getTime() !== dateB.getTime()) {
         return dateA - dateB;
       }
-      
-      // If dates are same, compare time strings
       return a.time.localeCompare(b.time);
     });
   }, [view, events, currentDate]);
@@ -380,7 +417,7 @@ const CALENDERAPP = () => {
           <span
             key={day + 1}
             className={`${isCurrentDay ? 'current-day' : ''} ${hasEvent ? 'has-event' : ''} ${isPast ? 'inactive' : ''}`}
-            onClick={() => handleDateClick(date)}
+            onClick={(e) => handleDateClick(date, e)}
           >
             {day + 1}
           </span>
@@ -399,7 +436,7 @@ const CALENDERAPP = () => {
         <span
           key={index}
           className={`${isCurrentDay ? 'current-day' : ''} ${hasEvent ? 'has-event' : ''} ${isPast ? 'inactive' : ''}`}
-          onClick={() => handleDateClick(day)}
+          onClick={(e) => handleDateClick(day, e)}
         >
           {day.getDate()}
         </span>
@@ -407,11 +444,18 @@ const CALENDERAPP = () => {
     });
   };
 
-  // Check if the current view matches the current month/year
   const isCurrentMonth = currentDate.getMonth() === today.getMonth() && currentDate.getFullYear() === today.getFullYear();
 
+  // Determine animation class
+  const getAnimationClass = () => {
+    if (isAnimating) {
+      return direction === 'forward' ? 'fade-out-left' : 'fade-out-right';
+    }
+    return direction === 'forward' ? 'enter-from-right' : 'enter-from-left';
+  };
+
   return (
-    <div className={`calender-app ${view}-view`}>
+    <div className={`calender-app ${view}-view`} ref={appRef}>
       <div className="calender">
         <div className="calender-header">
           <h1 className="heading">
@@ -453,8 +497,13 @@ const CALENDERAPP = () => {
             <div className="weekdays">
               {daysofWeek.map((day) => <span key={day}>{day}</span>)}
             </div>
-            <div className="days">
-              {view === 'month' ? renderMonthView() : renderWeekView()}
+            <div className="calendar-grid-wrapper" style={{ height: containerHeight }}>
+                <div 
+                    className={`days ${getAnimationClass()}`}
+                    ref={gridRef}
+                >
+                    {view === 'month' ? renderMonthView() : renderWeekView()}
+                </div>
             </div>
           </>
         )}
@@ -462,7 +511,10 @@ const CALENDERAPP = () => {
 
       <div className="events">
         {showEventPopup && (
-          <div className="event-popup">
+          <div 
+            className="event-popup" 
+            style={popupPosition.x !== 0 ? { transformOrigin: `${popupPosition.x}px ${popupPosition.y}px` } : {}}
+          >
             <div className="time-input">
               <div className="event-popup-time">
                   <i className="bx bx-time-five"></i>
