@@ -1,3 +1,7 @@
+:root {
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+}
+
 .calender-app {
   width: 60%;
   min-width: 90vmin;
@@ -11,6 +15,7 @@
   column-gap: 5rem;
   position: relative;
   transform-style: preserve-3d;
+  transition: height 0.4s var(--ease-out-expo);
 }
 
 .calender-app::after{
@@ -167,9 +172,50 @@
     justify-content: center;
 }
 
+/* Wrapper for smooth height animation */
+.calendar-grid-wrapper {
+    width: 100%;
+    position: relative;
+    overflow: hidden;
+    transition: height 0.4s var(--ease-out-expo);
+}
+
 .days {
     display: flex;
     flex-wrap: wrap;
+    width: 100%;
+    transition: opacity 0.3s ease, transform 0.3s ease;
+}
+
+/* Animation States */
+.days.fade-out-left {
+    opacity: 0;
+    transform: translateX(-20px);
+    pointer-events: none;
+}
+
+.days.fade-out-right {
+    opacity: 0;
+    transform: translateX(20px);
+    pointer-events: none;
+}
+
+.days.enter-from-right {
+    animation: slideInRight 0.4s var(--ease-out-expo) forwards;
+}
+
+.days.enter-from-left {
+    animation: slideInLeft 0.4s var(--ease-out-expo) forwards;
+}
+
+@keyframes slideInRight {
+    from { opacity: 0; transform: translateX(20px); }
+    to { opacity: 1; transform: translateX(0); }
+}
+
+@keyframes slideInLeft {
+    from { opacity: 0; transform: translateX(-20px); }
+    to { opacity: 1; transform: translateX(0); }
 }
 
 .days span {
@@ -183,9 +229,15 @@
     font-size: clamp(1rem, 1cqi, 1.6rem);
     color: #ddd;
     cursor: pointer;
-    transition: all 0.3s ease;
+    transition: all 0.2s ease;
     text-shadow: 0  .5rem 1rem rgba(0,0,0,0.2);
     position: relative;
+    backface-visibility: hidden;
+}
+
+.days span:hover {
+    transform: scale(1.02);
+    z-index: 2;
 }
 
 .days span.inactive {
@@ -282,6 +334,12 @@
     align-items: center;
     row-gap: 2rem;
     z-index: 10;
+    animation: popupScale 0.4s var(--ease-out-expo) forwards;
+}
+
+@keyframes popupScale {
+    from { opacity: 0; transform: scale(0.5); }
+    to { opacity: 1; transform: scale(1); }
 }
 
 .time-input{
