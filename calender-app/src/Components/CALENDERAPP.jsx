@@ -343,128 +343,118 @@ const CALENDERAPP = () => {
   };
 
   return (
-    <div className="layout-container">
-      <div className={`calender-app ${view}-view`}>
-        <div className="calender">
-          <div className="calender-header">
-            <h1 className="heading">
-              <i className="bx bxs-calendar-check"></i> Calendar
-            </h1>
-            <button className="settings-btn" onClick={() => setShowSettings(true)} title="Data Management">
-              <i className='bx bx-cog'></i>
+    <div className={`calender-app ${view}-view`}>
+      <div className="calender">
+        <div className="calender-header">
+          <h1 className="heading">
+            <i className="bx bxs-calendar-check"></i> Calendar
+          </h1>
+          <button className="settings-btn" onClick={() => setShowSettings(true)} title="Data Management">
+            <i className='bx bx-cog'></i>
+          </button>
+        </div>
+        
+        <div className="calender-header">
+           <div className="view-switcher">
+            <button onClick={() => setView('month')} className={view === 'month' ? 'active' : ''}>
+                <i className="bx bx-calendar"></i> Month
+            </button>
+            <button onClick={() => setView('week')} className={view === 'week' ? 'active' : ''}>
+                <i className="bx bx-calendar-week"></i> Week
+            </button>
+            <button onClick={() => setView('day')} className={view === 'day' ? 'active' : ''}>
+                <i className="bx bx-calendar-event"></i> Day
             </button>
           </div>
-          
-          <div className="calender-header">
-             <div className="view-switcher">
-              <button onClick={() => setView('month')} className={view === 'month' ? 'active' : ''}>
-                  <i className="bx bx-calendar"></i> Month
-              </button>
-              <button onClick={() => setView('week')} className={view === 'week' ? 'active' : ''}>
-                  <i className="bx bx-calendar-week"></i> Week
-              </button>
-              <button onClick={() => setView('day')} className={view === 'day' ? 'active' : ''}>
-                  <i className="bx bx-calendar-event"></i> Day
-              </button>
-            </div>
-          </div>
-
-          <div className="nevigate-date">
-            <h2>{renderHeader()}</h2>
-            <div className="buttons">
-              <i className="bx bx-chevron-left" onClick={handlePrev}></i>
-              <i className="bx bx-chevron-right" onClick={handleNext}></i>
-            </div>
-          </div>
-          {view !== 'day' && (
-            <>
-              <div className="weekdays">
-                {daysofWeek.map((day) => <span key={day}>{day}</span>)}
-              </div>
-              <div className="days">
-                {view === 'month' ? renderMonthView() : renderWeekView()}
-              </div>
-            </>
-          )}
         </div>
 
-        <div className="events">
-          {showEventPopup && (
-            <div className="event-popup">
-              <div className="time-input">
-                <div className="event-popup-time">
-                    <i className="bx bx-time-five"></i>
-                </div>
-                {/* Custom 12-Hour Time Picker */}
-                <input 
-                  type="number" 
-                  min="1" max="12" 
-                  value={timeHours} 
-                  onChange={(e) => setTimeHours(e.target.value)} 
-                  onBlur={handleTimeBlur}
-                  placeholder="HH"
-                />
-                <span>:</span>
-                <input 
-                  type="number" 
-                  min="0" max="59" 
-                  value={timeMinutes} 
-                  onChange={(e) => setTimeMinutes(e.target.value)} 
-                  onBlur={handleTimeBlur}
-                  placeholder="MM"
-                />
-                <select value={timePeriod} onChange={(e) => setTimePeriod(e.target.value)}>
-                  <option value="AM">AM</option>
-                  <option value="PM">PM</option>
-                </select>
-              </div>
-              <textarea 
-                placeholder="Enter Event Text (Maximum 60 characters)" 
-                value={eventText} 
-                maxLength={60}
-                onChange={(e) => setEventText(e.target.value)} 
-              ></textarea>
-              <button className="event-popup-btn" onClick={handleEventSubmit}>
-                <i className={`bx ${editingEvent ? 'bxs-edit' : 'bx-plus'}`}></i>
-                {editingEvent ? 'Update Event' : 'Add Event'}
-              </button>
-              <button className="close-event-popup" onClick={() => setShowEventPopup(false)} >
-                <i className="bx bx-x"></i>
-              </button>
-            </div>
-          )}
-          
-          {filteredEvents.length === 0 ? (
-              <div className="empty-state">
-                  <i className="bx bx-calendar-x"></i>
-                  <p>No events found</p>
-              </div>
-          ) : (
-              filteredEvents.map((event) => (
-              <div className="event" key={event.id}>
-                  <div className="event-date-wrapper">
-                  <div className="event-date">
-                      {`${monthsOfYear[event.date.getMonth()]} ${event.date.getDate()}, ${event.date.getFullYear()}`}
-                  </div>
-                  <div className="event-time">{formatTime(event.time)}</div>
-                  </div>
-                  <div className="event-text">{event.text}</div>
-                  <div className="event-buttons">
-                  <i className="bx bxs-edit-alt" onClick={() => handleEditEvent(event)}></i>
-                  <i className="bx bxs-message-alt-x" onClick={() => handleDeleteEvent(event.id)}></i>
-                  </div>
-              </div>
-              ))
-          )}
+        <div className="nevigate-date">
+          <h2>{renderHeader()}</h2>
+          <div className="buttons">
+            <i className="bx bx-chevron-left" onClick={handlePrev}></i>
+            <i className="bx bx-chevron-right" onClick={handleNext}></i>
+          </div>
         </div>
+        {view !== 'day' && (
+          <>
+            <div className="weekdays">
+              {daysofWeek.map((day) => <span key={day}>{day}</span>)}
+            </div>
+            <div className="days">
+              {view === 'month' ? renderMonthView() : renderWeekView()}
+            </div>
+          </>
+        )}
       </div>
 
-      <div className="credits">
-          <div className="credits-text">Designed and Programmed by Tanmay Srivastava</div>
-          <div className="credits-github">
-              <i className='bx bxl-github'></i>
-              <span>TacticalReader</span>
+      <div className="events">
+        {showEventPopup && (
+          <div className="event-popup">
+            <div className="time-input">
+              <div className="event-popup-time">
+                  <i className="bx bx-time-five"></i>
+              </div>
+              {/* Custom 12-Hour Time Picker */}
+              <input 
+                type="number" 
+                min="1" max="12" 
+                value={timeHours} 
+                onChange={(e) => setTimeHours(e.target.value)} 
+                onBlur={handleTimeBlur}
+                placeholder="HH"
+              />
+              <span>:</span>
+              <input 
+                type="number" 
+                min="0" max="59" 
+                value={timeMinutes} 
+                onChange={(e) => setTimeMinutes(e.target.value)} 
+                onBlur={handleTimeBlur}
+                placeholder="MM"
+              />
+              <select value={timePeriod} onChange={(e) => setTimePeriod(e.target.value)}>
+                <option value="AM">AM</option>
+                <option value="PM">PM</option>
+              </select>
+            </div>
+            <textarea 
+              placeholder="Enter Event Text (Maximum 60 characters)" 
+              value={eventText} 
+              maxLength={60}
+              onChange={(e) => setEventText(e.target.value)} 
+            ></textarea>
+            <button className="event-popup-btn" onClick={handleEventSubmit}>
+              <i className={`bx ${editingEvent ? 'bxs-edit' : 'bx-plus'}`}></i>
+              {editingEvent ? 'Update Event' : 'Add Event'}
+            </button>
+            <button className="close-event-popup" onClick={() => setShowEventPopup(false)} >
+              <i className="bx bx-x"></i>
+            </button>
           </div>
+        )}
+        
+        {filteredEvents.length === 0 ? (
+            <div className="empty-state">
+                <i className="bx bx-calendar-x"></i>
+                <p>No events found</p>
+            </div>
+        ) : (
+            filteredEvents.map((event) => (
+            <div className="event" key={event.id}>
+                <div className="event-date-wrapper">
+                <div className="event-date">
+                    {`${monthsOfYear[event.date.getMonth()]} ${event.date.getDate()}, ${event.date.getFullYear()}`}
+                </div>
+                <div className="event-time">{formatTime(event.time)}</div>
+                </div>
+                <div className="event-text">{event.text}</div>
+                <div className="event-buttons">
+                <i className="bx bxs-edit-alt" onClick={() => handleEditEvent(event)}></i>
+                <i className="bx bxs-message-alt-x" onClick={() => handleDeleteEvent(event.id)}></i>
+                </div>
+            </div>
+            ))
+        )}
       </div>
 
       {/* Toast Notification */}
