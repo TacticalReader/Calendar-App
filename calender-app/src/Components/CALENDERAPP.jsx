@@ -338,14 +338,9 @@ const CALENDERAPP = () => {
       <div className="calender">
         <div className="calender-header">
           <h1 className="heading">Calendar</h1>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-            <span className="saved-indicator">
-              <i className='bx bx-check-circle'></i> Saved to browser
-            </span>
-            <button className="settings-btn" onClick={() => setShowSettings(true)} title="Data Management">
-              <i className='bx bx-cog'></i>
-            </button>
-          </div>
+          <button className="settings-btn" onClick={() => setShowSettings(true)} title="Data Management">
+            <i className='bx bx-cog'></i>
+          </button>
         </div>
         
         <div className="calender-header">
@@ -447,6 +442,9 @@ const CALENDERAPP = () => {
         <div className="settings-overlay">
           <div className="settings-modal">
             <h2>Data Management</h2>
+            <div className="saved-indicator">
+              <i className='bx bx-check-circle'></i> Saved to browser
+            </div>
             <div className="settings-actions">
               <button className="settings-btn-action" onClick={handleExport}>
                 <i className='bx bxs-download'></i> Download Calendar (.json)
