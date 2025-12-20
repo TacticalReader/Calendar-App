@@ -314,25 +314,37 @@
 
 .event-popup{
     position: absolute;
-    top: 38%;
-    left: 3rem;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
     background-color: #161b22;
-    width: clamp(25rem, 21cqi, 40rem);
-    aspect-ratio: 10 / 9;
+    width: clamp(30rem, 30cqi, 45rem);
+    /* Removed fixed aspect ratio to allow growth */
+    max-height: 85vh;
+    overflow-y: auto;
+    padding: 2.5rem;
     border-radius: 1rem;
-    box-shadow: 0 1rem 3rem rgba(0,0,0,0.3);
+    box-shadow: 0 1rem 3rem rgba(0,0,0,0.5);
     display: flex;
     flex-direction: column;
-    justify-content: center;
     align-items: center;
-    row-gap: 2rem;
+    row-gap: 1.5rem;
     z-index: 10;
     animation: popupScale 0.4s var(--ease-out-expo) forwards;
 }
 
+/* Custom scrollbar for popup */
+.event-popup::-webkit-scrollbar {
+    width: 0.5rem;
+}
+.event-popup::-webkit-scrollbar-thumb {
+    background: #2c3542;
+    border-radius: 1rem;
+}
+
 @keyframes popupScale {
-    from { opacity: 0; transform: scale(0.5); }
-    to { opacity: 1; transform: scale(1); }
+    from { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
 .time-input{
@@ -383,6 +395,45 @@
     font-size: 2rem;
 }
 
+/* New Form Styles for Recurrence & Reminders */
+.form-row {
+    display: flex;
+    gap: 1rem;
+    width: 100%;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+    flex: 1;
+}
+
+.form-group label {
+    color: #78879e;
+    font-size: 1.2rem;
+    font-family: "Bebas Neue", sans-serif;
+    letter-spacing: 0.1rem;
+}
+
+.form-select, .form-input {
+    background-color: #0f1319;
+    border: 1px solid #2c3542;
+    color: #fff;
+    padding: 0.8rem;
+    border-radius: 0.5rem;
+    font-size: 1.2rem;
+    width: 100%;
+    font-family: inherit;
+}
+
+.form-select:focus, .form-input:focus {
+    outline: none;
+    border-color: #00a3ff;
+}
+
 .event{
     width: 100%;
     height: 7rem;
@@ -406,8 +457,8 @@
 }
 
 .event-popup textarea {
-    width: clamp(15rem, 15cqi, 25rem);
-    aspect-ratio: 5 / 2;
+    width: 100%;
+    height: 8rem;
     resize: none;
     background-color: #0f1319;
     border: none;
@@ -430,7 +481,7 @@
     color: transparent;
 }
 .event-popup-btn{
-    width: clamp(15rem, 15cqi, 25rem);
+    width: 100%;
     height: 4rem;
     background-color: #ef9011;
     font-family: 'Bebas Neue',sans-serif;
@@ -444,6 +495,7 @@
     align-items: center;
     justify-content: center;
     gap: 1rem;
+    border-radius: 0.5rem;
 }
 .event-popup-btn:active{
     transform: scale(0.98); 
@@ -649,11 +701,7 @@
   margin: auto;
   }
   .event-popup{
-    top: 18%;
-    left: 50%;
-    transform: translateX(-50%);
-    width: 60%;
-    aspect-ratio: 4 / 3 ;
+    width: 80%;
     row-gap: 1rem;
   }
 
@@ -667,13 +715,12 @@
     font-size: clamp(1.5rem, 3cqi, 2.2rem);
   }
   .event-popup textarea{
-    width: clamp(18rem, 35cqi, 28rem);
+    width: 100%;
 }
   .event-popup textarea::placeholder{
    font-size: clamp(1rem, 1.5cqi, 2rem);
 }
 .event-popup-btn{
-   width: clamp(18rem, 35cqi, 28rem);
     font-size: clamp(1.5rem, 3cqi, 2.2rem);
   }
   .event-date{
@@ -696,8 +743,7 @@
     width: 100%;
   }
   .event-popup{
-    top: 23%;
-    width: 80%;
+    width: 90%;
   }
   .events{
     width: 100%;
