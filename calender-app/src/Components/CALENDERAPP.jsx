@@ -181,6 +181,10 @@ const CALENDERAPP = () => {
     }
   };
 
+  const handleGotoToday = () => {
+    setCurrentDate(new Date());
+  };
+
   const handleDateClick = (clickedDate) => {
     // Normalize clicked date to midnight for comparison
     const normalizedDate = new Date(clickedDate);
@@ -403,6 +407,9 @@ const CALENDERAPP = () => {
     });
   };
 
+  // Check if the current view matches the current month/year
+  const isCurrentMonth = currentDate.getMonth() === today.getMonth() && currentDate.getFullYear() === today.getFullYear();
+
   return (
     <div className={`calender-app ${view}-view`}>
       <div className="calender">
@@ -431,6 +438,11 @@ const CALENDERAPP = () => {
 
         <div className="nevigate-date">
           <h2>{renderHeader()}</h2>
+          {!isCurrentMonth && (
+             <button className="goto-today-btn" onClick={handleGotoToday}>
+                <i className='bx bx-calendar'></i> Today
+             </button>
+          )}
           <div className="buttons">
             <i className="bx bx-chevron-left" onClick={handlePrev}></i>
             <i className="bx bx-chevron-right" onClick={handleNext}></i>
@@ -496,7 +508,7 @@ const CALENDERAPP = () => {
         
         {filteredEvents.length === 0 ? (
             <div className="empty-state">
-                <i className="bx bx-calendar-x"></i>
+                <i className="bx bx-calendar-edit"></i>
                 <p>No events found</p>
             </div>
         ) : (
