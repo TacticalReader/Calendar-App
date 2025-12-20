@@ -1,7 +1,8 @@
 .calender-app {
   width: 60%;
   min-width: 90vmin;
-  aspect-ratio: 3 / 2;
+  min-height: 70vh;
+  height: auto;
   background: #1e242d;
   padding: 3rem;
   border-radius: 3rem;
@@ -471,7 +472,7 @@
 
 @media (max-width: 850px) {
   .calender-app {
-    aspect-ratio: 3 / 2;
+    height: auto;
     flex-direction: column;
     row-gap: 2rem;
   }
@@ -531,7 +532,7 @@
 
 @media (max-width: 500px) {
   .calender-app{
-    aspect-ratio: 10/9;
+    height: auto;
   }
   .calender {
     width: 100%;
@@ -547,6 +548,6 @@
 
 @media (max-width: 350px) {
   .calender-app{
-    aspect-ratio: 3/2;
+    height: auto;
   }
 }
