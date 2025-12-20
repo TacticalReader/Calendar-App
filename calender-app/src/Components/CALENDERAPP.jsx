@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useRef } from "react";
+import { motion, useMotionValue, animate } from "framer-motion";
 
 const CALENDERAPP = () => {
   const daysofWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -21,9 +22,11 @@ const CALENDERAPP = () => {
 
   // Animation States
   const [isAnimating, setIsAnimating] = useState(false);
-  const [direction, setDirection] = useState('forward'); // 'forward' | 'backward'
   const [containerHeight, setContainerHeight] = useState('auto');
   const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
+
+  // Framer Motion Value for Swipe
+  const x = useMotionValue(0);
 
   // Time Picker State (UI only)
   const [timeHours, setTimeHours] = useState("12");
@@ -172,9 +175,6 @@ const CALENDERAPP = () => {
     setToast(null);
   };
 
-  const daysInMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0).getDate();
-  const firstDayOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).getDay();
-
   const changeDate = (amount) => {
     if (view === 'month') {
       setCurrentDate(prev => new Date(prev.getFullYear(), prev.getMonth() + amount, 1));
@@ -185,24 +185,67 @@ const CALENDERAPP = () => {
     }
   };
 
-  const handlePrev = () => {
-    if (isAnimating) return;
-    setDirection('backward');
-    setIsAnimating(true);
-    setTimeout(() => {
-      changeDate(-1);
-      setIsAnimating(false);
-    }, 300);
+  const getPrevDate = (date) => {
+    if (view === 'month') return new Date(date.getFullYear(), date.getMonth() - 1, 1);
+    if (view === 'week') {
+        const d = new Date(date);
+        d.setDate(d.getDate() - 7);
+        return d;
+    }
+    return date;
+  };
+  
+  const getNextDate = (date) => {
+    if (view === 'month') return new Date(date.getFullYear(), date.getMonth() + 1, 1);
+    if (view === 'week') {
+        const d = new Date(date);
+        d.setDate(d.getDate() + 7);
+        return d;
+    }
+    return date;
   };
 
-  const handleNext = () => {
+  const handlePrev = async () => {
     if (isAnimating) return;
-    setDirection('forward');
     setIsAnimating(true);
-    setTimeout(() => {
-      changeDate(1);
-      setIsAnimating(false);
-    }, 300);
+    const width = gridRef.current?.offsetWidth || 0;
+    await animate(x, width, { type: "spring", stiffness: 300, damping: 30 });
+    changeDate(-1);
+    x.set(0);
+    setIsAnimating(false);
+  };
+
+  const handleNext = async () => {
+    if (isAnimating) return;
+    setIsAnimating(true);
+    const width = gridRef.current?.offsetWidth || 0;
+    await animate(x, -width, { type: "spring", stiffness: 300, damping: 30 });
+    changeDate(1);
+    x.set(0);
+    setIsAnimating(false);
+  };
+
+  const handleDragEnd = async (event, info) => {
+    const width = gridRef.current?.offsetWidth || 0;
+    const offset = info.offset.x;
+    const velocity = info.velocity.x;
+    
+    // Threshold: 50% of width or fast swipe
+    const threshold = width / 2;
+    const isSwipeLeft = offset < -threshold || (offset < 0 && velocity < -500);
+    const isSwipeRight = offset > threshold || (offset > 0 && velocity > 500);
+
+    if (isSwipeLeft) {
+        await animate(x, -width, { type: "spring", stiffness: 300, damping: 30 });
+        changeDate(1);
+        x.set(0);
+    } else if (isSwipeRight) {
+        await animate(x, width, { type: "spring", stiffness: 300, damping: 30 });
+        changeDate(-1);
+        x.set(0);
+    } else {
+        animate(x, 0, { type: "spring", stiffness: 300, damping: 30 });
+    }
   };
 
   const handleGotoToday = () => {
@@ -293,13 +336,7 @@ const CALENDERAPP = () => {
     setEventText(event.text);
     setEditingEvent(event);
     setShowEventPopup(true);
-    // Reset popup position to center or default if triggered from list
-    // Or we could try to find the day cell, but for list edit, default center is fine.
-    // We'll leave popupPosition as is, or reset it if we want center behavior.
-    // Since the popup is absolute, if we don't set origin, it defaults to center of element.
-    // But we are setting transform-origin inline. Let's reset it to center for list edits.
-    setPopupPosition({ x: 0, y: 0 }); // 0,0 might be top-left. 
-    // Actually, if we want default animation for list edit, we might skip the inline style.
+    setPopupPosition({ x: 0, y: 0 }); 
   }
 
   const handleDeleteEvent = (eventId) => {
@@ -403,56 +440,63 @@ const CALENDERAPP = () => {
     }, {});
   }, [events]);
 
-  const renderMonthView = () => (
-    <>
-      {[...Array(firstDayOfMonth).keys()].map((_, index) => (
-        <span key={`empty-${index}`}></span>
-      ))}
-      {[...Array(daysInMonth).keys()].map((day) => {
-        const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day + 1);
-        const isCurrentDay = isSameDay(date, today);
-        const hasEvent = eventsByDay[date.toDateString()];
-        const isPast = date < today;
-        return (
-          <span
-            key={day + 1}
-            className={`${isCurrentDay ? 'current-day' : ''} ${hasEvent ? 'has-event' : ''} ${isPast ? 'inactive' : ''}`}
-            onClick={(e) => handleDateClick(date, e)}
-          >
-            {day + 1}
-          </span>
-        );
-      })}
-    </>
-  );
+  const renderMonthGrid = (date) => {
+    const daysInMonth = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+    const firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1).getDay();
 
-  const renderWeekView = () => {
-    const weekDays = getWeekDays(currentDate);
-    return weekDays.map((day, index) => {
-      const isCurrentDay = isSameDay(day, today);
-      const hasEvent = eventsByDay[day.toDateString()];
-      const isPast = day < today;
-      return (
-        <span
-          key={index}
-          className={`${isCurrentDay ? 'current-day' : ''} ${hasEvent ? 'has-event' : ''} ${isPast ? 'inactive' : ''}`}
-          onClick={(e) => handleDateClick(day, e)}
-        >
-          {day.getDate()}
-        </span>
-      );
-    });
+    return (
+      <div className="days">
+        {[...Array(firstDayOfMonth).keys()].map((_, index) => (
+          <span key={`empty-${index}`}></span>
+        ))}
+        {[...Array(daysInMonth).keys()].map((day) => {
+          const d = new Date(date.getFullYear(), date.getMonth(), day + 1);
+          const isCurrentDay = isSameDay(d, today);
+          const hasEvent = eventsByDay[d.toDateString()];
+          const isPast = d < today;
+          return (
+            <span
+              key={day + 1}
+              className={`${isCurrentDay ? 'current-day' : ''} ${hasEvent ? 'has-event' : ''} ${isPast ? 'inactive' : ''}`}
+              onClick={(e) => handleDateClick(d, e)}
+            >
+              {day + 1}
+            </span>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderWeekGrid = (date) => {
+    const weekDays = getWeekDays(date);
+    return (
+      <div className="days">
+        {weekDays.map((day, index) => {
+          const isCurrentDay = isSameDay(day, today);
+          const hasEvent = eventsByDay[day.toDateString()];
+          const isPast = day < today;
+          return (
+            <span
+              key={index}
+              className={`${isCurrentDay ? 'current-day' : ''} ${hasEvent ? 'has-event' : ''} ${isPast ? 'inactive' : ''}`}
+              onClick={(e) => handleDateClick(day, e)}
+            >
+              {day.getDate()}
+            </span>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderGrid = (date) => {
+    if (view === 'month') return renderMonthGrid(date);
+    if (view === 'week') return renderWeekGrid(date);
+    return null;
   };
 
   const isCurrentMonth = currentDate.getMonth() === today.getMonth() && currentDate.getFullYear() === today.getFullYear();
-
-  // Determine animation class
-  const getAnimationClass = () => {
-    if (isAnimating) {
-      return direction === 'forward' ? 'fade-out-left' : 'fade-out-right';
-    }
-    return direction === 'forward' ? 'enter-from-right' : 'enter-from-left';
-  };
 
   return (
     <div className={`calender-app ${view}-view`} ref={appRef}>
@@ -498,12 +542,24 @@ const CALENDERAPP = () => {
               {daysofWeek.map((day) => <span key={day}>{day}</span>)}
             </div>
             <div className="calendar-grid-wrapper" style={{ height: containerHeight }}>
-                <div 
-                    className={`days ${getAnimationClass()}`}
-                    ref={gridRef}
+                <div className="swipe-overlay"></div>
+                <motion.div 
+                    className="calendar-track"
+                    drag="x"
+                    dragConstraints={{ left: -1000, right: 1000 }}
+                    style={{ x, marginLeft: "-100%" }}
+                    onDragEnd={handleDragEnd}
                 >
-                    {view === 'month' ? renderMonthView() : renderWeekView()}
-                </div>
+                    <div className="days-grid-slide">
+                        {renderGrid(getPrevDate(currentDate))}
+                    </div>
+                    <div className="days-grid-slide" ref={gridRef}>
+                        {renderGrid(currentDate)}
+                    </div>
+                    <div className="days-grid-slide">
+                        {renderGrid(getNextDate(currentDate))}
+                    </div>
+                </motion.div>
             </div>
           </>
         )}
