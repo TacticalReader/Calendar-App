@@ -3,7 +3,10 @@ import { useState, useEffect, useMemo } from "react";
 const CALENDERAPP = () => {
   const daysofWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
   const monthsOfYear = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+  
+  // Use a stable reference for "today" to avoid hydration mismatches or stale state if left open overnight
   const today = new Date();
+  today.setHours(0, 0, 0, 0);
 
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -119,9 +122,13 @@ const CALENDERAPP = () => {
   };
 
   const handleDateClick = (clickedDate) => {
-    if (clickedDate < new Date(today.toDateString())) return;
+    // Normalize clicked date to midnight for comparison
+    const normalizedDate = new Date(clickedDate);
+    normalizedDate.setHours(0, 0, 0, 0);
 
-    setSelectedDate(clickedDate);
+    if (normalizedDate < today) return;
+
+    setSelectedDate(normalizedDate);
     setShowEventPopup(true);
     // Reset time picker to default 12:00 AM
     setTimeHours("12");
@@ -303,10 +310,11 @@ const CALENDERAPP = () => {
         const date = new Date(currentDate.getFullYear(), currentDate.getMonth(), day + 1);
         const isCurrentDay = isSameDay(date, today);
         const hasEvent = eventsByDay[date.toDateString()];
+        const isPast = date < today;
         return (
           <span
             key={day + 1}
-            className={`${isCurrentDay ? 'current-day' : ''} ${hasEvent ? 'has-event' : ''}`}
+            className={`${isCurrentDay ? 'current-day' : ''} ${hasEvent ? 'has-event' : ''} ${isPast ? 'inactive' : ''}`}
             onClick={() => handleDateClick(date)}
           >
             {day + 1}
@@ -321,10 +329,11 @@ const CALENDERAPP = () => {
     return weekDays.map((day, index) => {
       const isCurrentDay = isSameDay(day, today);
       const hasEvent = eventsByDay[day.toDateString()];
+      const isPast = day < today;
       return (
         <span
           key={index}
-          className={`${isCurrentDay ? 'current-day' : ''} ${hasEvent ? 'has-event' : ''}`}
+          className={`${isCurrentDay ? 'current-day' : ''} ${hasEvent ? 'has-event' : ''} ${isPast ? 'inactive' : ''}`}
           onClick={() => handleDateClick(day)}
         >
           {day.getDate()}
@@ -337,7 +346,9 @@ const CALENDERAPP = () => {
     <div className={`calender-app ${view}-view`}>
       <div className="calender">
         <div className="calender-header">
-          <h1 className="heading">Calendar</h1>
+          <h1 className="heading">
+            <i className="bx bxs-calendar-check"></i> Calendar
+          </h1>
           <button className="settings-btn" onClick={() => setShowSettings(true)} title="Data Management">
             <i className='bx bx-cog'></i>
           </button>
@@ -345,9 +356,15 @@ const CALENDERAPP = () => {
         
         <div className="calender-header">
            <div className="view-switcher">
-            <button onClick={() => setView('month')} className={view === 'month' ? 'active' : ''}>Month</button>
-            <button onClick={() => setView('week')} className={view === 'week' ? 'active' : ''}>Week</button>
-            <button onClick={() => setView('day')} className={view === 'day' ? 'active' : ''}>Day</button>
+            <button onClick={() => setView('month')} className={view === 'month' ? 'active' : ''}>
+                <i className="bx bx-calendar"></i> Month
+            </button>
+            <button onClick={() => setView('week')} className={view === 'week' ? 'active' : ''}>
+                <i className="bx bx-calendar-week"></i> Week
+            </button>
+            <button onClick={() => setView('day')} className={view === 'day' ? 'active' : ''}>
+                <i className="bx bx-calendar-event"></i> Day
+            </button>
           </div>
         </div>
 
@@ -374,7 +391,9 @@ const CALENDERAPP = () => {
         {showEventPopup && (
           <div className="event-popup">
             <div className="time-input">
-              <div className="event-popup-time">Time</div>
+              <div className="event-popup-time">
+                  <i className="bx bx-time-five"></i>
+              </div>
               {/* Custom 12-Hour Time Picker */}
               <input 
                 type="number" 
@@ -405,6 +424,7 @@ const CALENDERAPP = () => {
               onChange={(e) => setEventText(e.target.value)} 
             ></textarea>
             <button className="event-popup-btn" onClick={handleEventSubmit}>
+              <i className={`bx ${editingEvent ? 'bxs-edit' : 'bx-plus'}`}></i>
               {editingEvent ? 'Update Event' : 'Add Event'}
             </button>
             <button className="close-event-popup" onClick={() => setShowEventPopup(false)} >
@@ -412,21 +432,29 @@ const CALENDERAPP = () => {
             </button>
           </div>
         )}
-        {filteredEvents.map((event) => (
-          <div className="event" key={event.id}>
-            <div className="event-date-wrapper">
-              <div className="event-date">
-                {`${monthsOfYear[event.date.getMonth()]} ${event.date.getDate()}, ${event.date.getFullYear()}`}
-              </div>
-              <div className="event-time">{formatTime(event.time)}</div>
+        
+        {filteredEvents.length === 0 ? (
+            <div className="empty-state">
+                <i className="bx bx-calendar-x"></i>
+                <p>No events found</p>
             </div>
-            <div className="event-text">{event.text}</div>
-            <div className="event-buttons">
-              <i className="bx bxs-edit-alt" onClick={() => handleEditEvent(event)}></i>
-              <i className="bx bxs-message-alt-x" onClick={() => handleDeleteEvent(event.id)}></i>
+        ) : (
+            filteredEvents.map((event) => (
+            <div className="event" key={event.id}>
+                <div className="event-date-wrapper">
+                <div className="event-date">
+                    {`${monthsOfYear[event.date.getMonth()]} ${event.date.getDate()}, ${event.date.getFullYear()}`}
+                </div>
+                <div className="event-time">{formatTime(event.time)}</div>
+                </div>
+                <div className="event-text">{event.text}</div>
+                <div className="event-buttons">
+                <i className="bx bxs-edit-alt" onClick={() => handleEditEvent(event)}></i>
+                <i className="bx bxs-message-alt-x" onClick={() => handleDeleteEvent(event.id)}></i>
+                </div>
             </div>
-          </div>
-        ))}
+            ))
+        )}
       </div>
 
       {/* Toast Notification */}
