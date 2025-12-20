@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { motion, useMotionValue, animate } from "framer-motion";
 import { getOccurrences, getNextOccurrence } from "../utils/recurrence";
+import "./CALENDERAPP.css";
 
 const CALENDERAPP = () => {
   const daysofWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
