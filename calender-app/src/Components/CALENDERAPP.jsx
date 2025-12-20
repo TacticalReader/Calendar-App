@@ -455,6 +455,14 @@ const CALENDERAPP = () => {
             </div>
             ))
         )}
+
+        <div className="credits">
+            <div className="credits-text">Designed and Programmed by Tanmay Srivastava</div>
+            <div className="credits-github">
+                <i className='bx bxl-github'></i>
+                <span>TacticalReader</span>
+            </div>
+        </div>
       </div>
 
       {/* Toast Notification */}
