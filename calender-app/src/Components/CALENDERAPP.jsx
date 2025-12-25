@@ -670,7 +670,6 @@ const CALENDERAPP = () => {
         {showEventPopup && (
           <div 
             className="event-popup" 
-            // Removed dynamic transformOrigin to simplify layout with larger form
           >
             <div className="time-input">
               <div className="event-popup-time">
@@ -709,7 +708,7 @@ const CALENDERAPP = () => {
             {/* Recurrence Options */}
             <div className="form-row">
                 <div className="form-group">
-                    <label>Repeat</label>
+                    <label><i className='bx bx-revision'></i> Repeat</label>
                     <select className="form-select" value={recurrenceType} onChange={(e) => setRecurrenceType(e.target.value)}>
                         <option value="none">Does not repeat</option>
                         <option value="daily">Daily</option>
@@ -720,7 +719,7 @@ const CALENDERAPP = () => {
                 </div>
                 {recurrenceType !== 'none' && (
                     <div className="form-group">
-                        <label>Interval</label>
+                        <label><i className='bx bx-time'></i> Interval</label>
                         <input 
                             type="number" 
                             min="1" 
@@ -735,7 +734,7 @@ const CALENDERAPP = () => {
             {recurrenceType === 'monthly' && (
                 <div className="form-row">
                     <div className="form-group">
-                        <label>On</label>
+                        <label><i className='bx bx-calendar'></i> On</label>
                         <select className="form-select" value={monthlyType} onChange={(e) => setMonthlyType(e.target.value)}>
                             <option value="date">Same date ({getOrdinal(selectedDate.getDate())})</option>
                             <option value="day">Same day ({getOrdinal(Math.floor((selectedDate.getDate() - 1) / 7) + 1)} {daysofWeek[selectedDate.getDay()]})</option>
@@ -747,7 +746,7 @@ const CALENDERAPP = () => {
             {recurrenceType !== 'none' && (
                 <div className="form-row">
                     <div className="form-group">
-                        <label>Ends</label>
+                        <label><i className='bx bx-stop-circle'></i> Ends</label>
                         <select className="form-select" value={recurrenceEnd} onChange={(e) => setRecurrenceEnd(e.target.value)}>
                             <option value="never">Never</option>
                             <option value="date">On Date</option>
@@ -756,7 +755,7 @@ const CALENDERAPP = () => {
                     </div>
                     {recurrenceEnd === 'date' && (
                         <div className="form-group">
-                            <label>End Date</label>
+                            <label><i className='bx bx-calendar-x'></i> End Date</label>
                             <input 
                                 type="date" 
                                 className="form-input" 
@@ -767,7 +766,7 @@ const CALENDERAPP = () => {
                     )}
                     {recurrenceEnd === 'count' && (
                         <div className="form-group">
-                            <label>Count</label>
+                            <label><i className='bx bx-hash'></i> Count</label>
                             <input 
                                 type="number" 
                                 min="1" 
@@ -783,7 +782,7 @@ const CALENDERAPP = () => {
             {/* Reminder Options */}
             <div className="form-row">
                 <div className="form-group">
-                    <label>Reminder</label>
+                    <label><i className='bx bx-bell'></i> Reminder</label>
                     <select className="form-select" value={reminder} onChange={(e) => setReminder(e.target.value)}>
                         <option value="0">At time of event</option>
                         <option value="5">5 minutes before</option>
