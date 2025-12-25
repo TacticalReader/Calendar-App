@@ -20,6 +20,7 @@ const CALENDERAPP = () => {
   const [showEventPopup, setShowEventPopup] = useState(false);
   const [eventText, setEventText] = useState('');
   const [editingEvent, setEditingEvent] = useState(null);
+  const [conflictEvent, setConflictEvent] = useState(null);
 
   // Recurrence & Reminder State
   const [recurrenceType, setRecurrenceType] = useState('none');
@@ -271,6 +272,7 @@ const CALENDERAPP = () => {
     setTimePeriod("AM");
     setEventText("");
     setEditingEvent(null);
+    setConflictEvent(null);
     
     // Reset Recurrence & Reminder
     setRecurrenceType('none');
@@ -310,6 +312,28 @@ const CALENDERAPP = () => {
     if (timePeriod === 'AM' && h === 12) h = 0;
     const time24 = `${h.toString().padStart(2, '0')}:${timeMinutes}`;
 
+    // Conflict Detection
+    if (!conflictEvent) {
+        const startOfDay = new Date(selectedDate);
+        startOfDay.setHours(0,0,0,0);
+        const endOfDay = new Date(selectedDate);
+        endOfDay.setHours(23,59,59,999);
+        
+        const dayEvents = getOccurrences(events, startOfDay, endOfDay);
+        
+        const conflict = dayEvents.find(e => {
+            if (e.time !== time24) return false;
+            // If editing, ignore the event itself
+            if (editingEvent && (e.id === editingEvent.id || e.originalId === editingEvent.id)) return false;
+            return true;
+        });
+
+        if (conflict) {
+            setConflictEvent(conflict.text);
+            return;
+        }
+    }
+
     // Calculate Weekday info for "First Monday" logic
     const weekDay = selectedDate.getDay();
     const weekDayIndex = Math.floor((selectedDate.getDate() - 1) / 7);
@@ -348,6 +372,7 @@ const CALENDERAPP = () => {
     setShowEventPopup(false);
     setEventText("");
     setEditingEvent(null);
+    setConflictEvent(null);
   }
 
   const handleEditEvent = (event) => {
@@ -359,6 +384,7 @@ const CALENDERAPP = () => {
     parseTimeForUI(event.time);
     setEventText(event.text);
     setEditingEvent(event);
+    setConflictEvent(null);
     
     // Load Recurrence & Reminder state
     if (event.recurrence) {
@@ -654,7 +680,7 @@ const CALENDERAPP = () => {
                 type="number" 
                 min="1" max="12" 
                 value={timeHours} 
-                onChange={(e) => setTimeHours(e.target.value)} 
+                onChange={(e) => { setTimeHours(e.target.value); setConflictEvent(null); }} 
                 onBlur={handleTimeBlur}
                 placeholder="HH"
               />
@@ -663,11 +689,11 @@ const CALENDERAPP = () => {
                 type="number" 
                 min="0" max="59" 
                 value={timeMinutes} 
-                onChange={(e) => setTimeMinutes(e.target.value)} 
+                onChange={(e) => { setTimeMinutes(e.target.value); setConflictEvent(null); }} 
                 onBlur={handleTimeBlur}
                 placeholder="MM"
               />
-              <select value={timePeriod} onChange={(e) => setTimePeriod(e.target.value)}>
+              <select value={timePeriod} onChange={(e) => { setTimePeriod(e.target.value); setConflictEvent(null); }}>
                 <option value="AM">AM</option>
                 <option value="PM">PM</option>
               </select>
@@ -677,7 +703,7 @@ const CALENDERAPP = () => {
               placeholder="Enter Event Text (Maximum 60 characters)" 
               value={eventText} 
               maxLength={60}
-              onChange={(e) => setEventText(e.target.value)} 
+              onChange={(e) => { setEventText(e.target.value); setConflictEvent(null); }} 
             ></textarea>
 
             {/* Recurrence Options */}
@@ -770,9 +796,15 @@ const CALENDERAPP = () => {
                 </div>
             </div>
 
-            <button className="event-popup-btn" onClick={handleEventSubmit}>
+            {conflictEvent && (
+                <div className="conflict-warning">
+                    <i className='bx bx-error'></i> This overlaps with "{conflictEvent}". Save anyway?
+                </div>
+            )}
+
+            <button className={`event-popup-btn ${conflictEvent ? 'conflict' : ''}`} onClick={handleEventSubmit}>
               <i className={`bx ${editingEvent ? 'bxs-edit' : 'bx-plus'}`}></i>
-              {editingEvent ? 'Update Event' : 'Add Event'}
+              {conflictEvent ? 'Save Anyway' : (editingEvent ? 'Update Event' : 'Add Event')}
             </button>
             <button className="close-event-popup" onClick={() => setShowEventPopup(false)} >
               <i className="bx bx-x"></i>
