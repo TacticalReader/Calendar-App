@@ -1,7 +1,108 @@
 import { useState, useEffect, useMemo, useRef } from "react";
 import { motion, useMotionValue, animate } from "framer-motion";
+import {
+  Box,
+  Container,
+  Paper,
+  Typography,
+  IconButton,
+  Button,
+  ButtonGroup,
+  Grid,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  TextField,
+  Select,
+  MenuItem,
+  FormControl,
+  InputLabel,
+  Snackbar,
+  Alert,
+  List,
+  ListItem,
+  ListItemText,
+  ListItemSecondaryAction,
+  ThemeProvider,
+  createTheme,
+  CssBaseline,
+  Card,
+  CardContent,
+  Stack,
+  Divider,
+  Tooltip
+} from "@mui/material";
+import {
+  ChevronLeft,
+  ChevronRight,
+  CalendarMonth,
+  CalendarViewWeek,
+  CalendarViewDay,
+  Today,
+  Settings,
+  Add,
+  Edit,
+  Delete,
+  NotificationsActive,
+  Download,
+  Upload,
+  Close,
+  AccessTime,
+  EventAvailable,
+  EditCalendar,
+  CheckCircle,
+  Event as EventIcon
+} from "@mui/icons-material";
 import { getOccurrences, getNextOccurrence } from "../utils/recurrence";
-import "./CALENDERAPP.css";
+
+// Create a dark theme to match the original aesthetic
+const darkTheme = createTheme({
+  palette: {
+    mode: 'dark',
+    primary: {
+      main: '#ef9011',
+    },
+    secondary: {
+      main: '#00a3ff',
+    },
+    background: {
+      default: '#0f1319',
+      paper: '#1e242d',
+    },
+    text: {
+      primary: '#ffffff',
+      secondary: '#78879e',
+    },
+  },
+  typography: {
+    fontFamily: '"Roboto", "Helvetica", "Arial", sans-serif',
+    h3: {
+      fontWeight: 700,
+      letterSpacing: '0.1rem',
+    },
+    h4: {
+      fontWeight: 600,
+    }
+  },
+  components: {
+    MuiButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: '0.8rem',
+          textTransform: 'none',
+        }
+      }
+    },
+    MuiPaper: {
+      styleOverrides: {
+        root: {
+          backgroundImage: 'none',
+        }
+      }
+    }
+  }
+});
 
 const CALENDERAPP = () => {
   const daysofWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -33,7 +134,6 @@ const CALENDERAPP = () => {
   // Animation States
   const [isAnimating, setIsAnimating] = useState(false);
   const [containerHeight, setContainerHeight] = useState('auto');
-  const [popupPosition, setPopupPosition] = useState({ x: 0, y: 0 });
 
   const x = useMotionValue(0);
 
@@ -73,15 +173,6 @@ const CALENDERAPP = () => {
     }
   }, [currentDate, view, isAnimating]);
 
-  useEffect(() => {
-    if (toast) {
-      const timer = setTimeout(() => {
-        setToast(null);
-      }, 5000);
-      return () => clearTimeout(timer);
-    }
-  }, [toast]);
-
   const formatTime = (timeString) => {
     if (!timeString) return "";
     const [h, m] = timeString.split(':');
@@ -117,10 +208,10 @@ const CALENDERAPP = () => {
     }
     const permission = await Notification.requestPermission();
     if (permission === "granted") {
-      setToast({ message: "Notifications enabled!", visible: true });
+      setToast({ message: "Notifications enabled!", severity: "success" });
       new Notification("Calendar App", { body: "You will now receive alerts for upcoming events." });
     } else {
-      setToast({ message: "Permission denied", visible: true });
+      setToast({ message: "Permission denied", severity: "error" });
     }
   };
 
@@ -133,14 +224,6 @@ const CALENDERAPP = () => {
       
       events.forEach(event => {
         const reminderMinutes = event.reminder || 10;
-        // We want to notify if (EventTime - Reminder) is close to Now
-        // Find the next occurrence strictly after (Now - Reminder - Buffer)
-        // Actually, we want the occurrence where (OccurrenceTime - Reminder) is roughly Now.
-        // So we look for occurrences around Now + Reminder.
-        
-        const targetTime = new Date(now.getTime() + reminderMinutes * 60000);
-        
-        // Get next occurrence relative to now
         const nextOccurrence = getNextOccurrence(event, now);
         
         if (nextOccurrence) {
@@ -151,8 +234,6 @@ const CALENDERAPP = () => {
             const timeDiff = occDate.getTime() - now.getTime();
             const reminderMs = reminderMinutes * 60000;
 
-            // Trigger if within the minute of the reminder time
-            // i.e., Time until event is between (Reminder) and (Reminder - 1 min)
             if (timeDiff <= reminderMs && timeDiff > (reminderMs - 60000)) {
                  new Notification("Upcoming Event", {
                     body: `${event.text} in ${reminderMinutes} minutes`,
@@ -253,14 +334,9 @@ const CALENDERAPP = () => {
     setCurrentDate(new Date());
   };
 
-  const handleDateClick = (clickedDate, e) => {
+  const handleDateClick = (clickedDate) => {
     const normalizedDate = new Date(clickedDate);
     normalizedDate.setHours(0, 0, 0, 0);
-
-    if (appRef.current && e.target) {
-        // Simple centering logic or keep existing
-        setPopupPosition({ x: 0, y: 0 });
-    }
 
     setSelectedDate(normalizedDate);
     setShowEventPopup(true);
@@ -310,7 +386,6 @@ const CALENDERAPP = () => {
     if (timePeriod === 'AM' && h === 12) h = 0;
     const time24 = `${h.toString().padStart(2, '0')}:${timeMinutes}`;
 
-    // Calculate Weekday info for "First Monday" logic
     const weekDay = selectedDate.getDay();
     const weekDayIndex = Math.floor((selectedDate.getDate() - 1) / 7);
 
@@ -334,9 +409,6 @@ const CALENDERAPP = () => {
 
     let updatedEvents;
     if (editingEvent) {
-      // If editing, we update the master event. 
-      // Note: In a full app, we might ask "Update this instance" vs "Update series".
-      // Here we update the series (master event).
       updatedEvents = events.map(event =>
         event.id === editingEvent.id ? newEvent : event
       );
@@ -351,16 +423,11 @@ const CALENDERAPP = () => {
   }
 
   const handleEditEvent = (event) => {
-    // If it's an occurrence, we edit the master event (event.originalId)
-    // But for simplicity in this UI, we load the data from the clicked event instance
-    // which contains the master data merged in.
-    
     setSelectedDate(new Date(event.date));
     parseTimeForUI(event.time);
     setEventText(event.text);
     setEditingEvent(event);
     
-    // Load Recurrence & Reminder state
     if (event.recurrence) {
         setRecurrenceType(event.recurrence.type || 'none');
         setRecurrenceInterval(event.recurrence.interval || 1);
@@ -374,18 +441,16 @@ const CALENDERAPP = () => {
     setReminder(event.reminder || 10);
 
     setShowEventPopup(true);
-    setPopupPosition({ x: 0, y: 0 }); 
   }
 
   const handleDeleteEvent = (eventId) => {
-    // Delete the master event
     const eventToDelete = events.find(e => e.id === eventId);
     const newEvents = events.filter(event => event.id !== eventId);
     saveEvents(newEvents);
     
     setToast({
       message: `${eventToDelete?.text || 'Event'} deleted`,
-      visible: true
+      severity: "info"
     });
   }
 
@@ -413,10 +478,10 @@ const CALENDERAPP = () => {
         }));
         saveEvents(importedEvents);
         setShowSettings(false);
-        alert("Calendar restored successfully!");
+        setToast({ message: "Calendar restored successfully!", severity: "success" });
       } catch (err) {
         console.error(err);
-        alert("Failed to restore backup. Invalid file.");
+        setToast({ message: "Failed to restore backup. Invalid file.", severity: "error" });
       }
     };
     reader.readAsText(file);
@@ -434,7 +499,6 @@ const CALENDERAPP = () => {
     return week;
   };
 
-  // Calculate visible range for event expansion
   const visibleRange = useMemo(() => {
       let start = new Date(currentDate);
       let end = new Date(currentDate);
@@ -449,15 +513,12 @@ const CALENDERAPP = () => {
       } else {
           // Day view
       }
-      // Add buffer for safety
       start.setHours(0,0,0,0);
       end.setHours(23,59,59,999);
       return { start, end };
   }, [currentDate, view]);
 
-  // Generate events for the current view
   const filteredEvents = useMemo(() => {
-    // Expand recurring events
     const expandedEvents = getOccurrences(events, visibleRange.start, visibleRange.end);
 
     let filtered = [];
@@ -477,7 +538,6 @@ const CALENDERAPP = () => {
     });
   }, [view, events, currentDate, visibleRange]);
 
-  // Generate events for Month Grid indicators (always needs month range)
   const eventsByDay = useMemo(() => {
     const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
     const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
@@ -513,9 +573,9 @@ const CALENDERAPP = () => {
     const firstDayOfMonth = new Date(date.getFullYear(), date.getMonth(), 1).getDay();
 
     return (
-      <div className="days">
+      <Grid container columns={7} sx={{ width: '100%' }}>
         {[...Array(firstDayOfMonth).keys()].map((_, index) => (
-          <span key={`empty-${index}`}></span>
+          <Grid item xs={1} key={`empty-${index}`} sx={{ height: '4rem' }} />
         ))}
         {[...Array(daysInMonth).keys()].map((day) => {
           const d = new Date(date.getFullYear(), date.getMonth(), day + 1);
@@ -523,38 +583,92 @@ const CALENDERAPP = () => {
           const hasEvent = eventsByDay[d.toDateString()];
           const isPast = d < today;
           return (
-            <span
-              key={day + 1}
-              className={`${isCurrentDay ? 'current-day' : ''} ${hasEvent ? 'has-event' : ''} ${isPast ? 'inactive' : ''}`}
-              onClick={(e) => handleDateClick(d, e)}
-            >
-              {day + 1}
-            </span>
+            <Grid item xs={1} key={day + 1}>
+              <Box
+                onClick={() => handleDateClick(d)}
+                sx={{
+                  height: '4rem',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  cursor: 'pointer',
+                  borderRadius: '50%',
+                  width: '4rem',
+                  margin: '0 auto',
+                  position: 'relative',
+                  bgcolor: isCurrentDay ? 'primary.main' : 'transparent',
+                  color: isCurrentDay ? 'white' : isPast ? 'text.secondary' : 'text.primary',
+                  boxShadow: isCurrentDay ? '0 0 1.5rem 0.5rem rgba(239, 144, 17, 0.4)' : 'none',
+                  '&:hover': {
+                    bgcolor: isCurrentDay ? 'primary.dark' : 'rgba(239, 144, 17, 0.1)',
+                    color: isCurrentDay ? 'white' : 'primary.main',
+                  },
+                  '&::after': hasEvent ? {
+                    content: '""',
+                    position: 'absolute',
+                    bottom: '0.5rem',
+                    width: '0.4rem',
+                    height: '0.4rem',
+                    bgcolor: 'secondary.main',
+                    borderRadius: '50%',
+                  } : {}
+                }}
+              >
+                {day + 1}
+              </Box>
+            </Grid>
           );
         })}
-      </div>
+      </Grid>
     );
   };
 
   const renderWeekGrid = (date) => {
     const weekDays = getWeekDays(date);
     return (
-      <div className="days">
+      <Grid container columns={7} sx={{ width: '100%' }}>
         {weekDays.map((day, index) => {
           const isCurrentDay = isSameDay(day, today);
           const hasEvent = eventsByDay[day.toDateString()];
           const isPast = day < today;
           return (
-            <span
-              key={index}
-              className={`${isCurrentDay ? 'current-day' : ''} ${hasEvent ? 'has-event' : ''} ${isPast ? 'inactive' : ''}`}
-              onClick={(e) => handleDateClick(day, e)}
-            >
-              {day.getDate()}
-            </span>
+            <Grid item xs={1} key={index}>
+              <Box
+                onClick={() => handleDateClick(day)}
+                sx={{
+                  height: '4rem',
+                  display: 'flex',
+                  justifyContent: 'center',
+                  alignItems: 'center',
+                  cursor: 'pointer',
+                  borderRadius: '50%',
+                  width: '4rem',
+                  margin: '0 auto',
+                  position: 'relative',
+                  bgcolor: isCurrentDay ? 'primary.main' : 'transparent',
+                  color: isCurrentDay ? 'white' : isPast ? 'text.secondary' : 'text.primary',
+                  boxShadow: isCurrentDay ? '0 0 1.5rem 0.5rem rgba(239, 144, 17, 0.4)' : 'none',
+                  '&:hover': {
+                    bgcolor: isCurrentDay ? 'primary.dark' : 'rgba(239, 144, 17, 0.1)',
+                    color: isCurrentDay ? 'white' : 'primary.main',
+                  },
+                  '&::after': hasEvent ? {
+                    content: '""',
+                    position: 'absolute',
+                    bottom: '0.5rem',
+                    width: '0.4rem',
+                    height: '0.4rem',
+                    bgcolor: 'secondary.main',
+                    borderRadius: '50%',
+                  } : {}
+                }}
+              >
+                {day.getDate()}
+              </Box>
+            </Grid>
           );
         })}
-      </div>
+      </Grid>
     );
   };
 
@@ -566,7 +680,6 @@ const CALENDERAPP = () => {
 
   const isCurrentMonth = currentDate.getMonth() === today.getMonth() && currentDate.getFullYear() === today.getFullYear();
 
-  // Helper to get ordinal suffix for display
   const getOrdinal = (n) => {
       const s = ["th", "st", "nd", "rd"];
       const v = n % 100;
@@ -574,274 +687,373 @@ const CALENDERAPP = () => {
   };
 
   return (
-    <div className={`calender-app ${view}-view`} ref={appRef}>
-      <div className="calender">
-        <div className="calender-header">
-          <h1 className="heading">
-            <i className="bx bxs-calendar-check"></i> Calendar
-          </h1>
-          <button className="settings-btn" onClick={() => setShowSettings(true)} title="Data Management">
-            <i className='bx bx-cog'></i>
-          </button>
-        </div>
-        
-        <div className="calender-header">
-           <div className="view-switcher">
-            <button onClick={() => setView('month')} className={view === 'month' ? 'active' : ''}>
-                <i className="bx bx-calendar"></i> Month
-            </button>
-            <button onClick={() => setView('week')} className={view === 'week' ? 'active' : ''}>
-                <i className="bx bx-calendar-week"></i> Week
-            </button>
-            <button onClick={() => setView('day')} className={view === 'day' ? 'active' : ''}>
-                <i className="bx bx-calendar-event"></i> Day
-            </button>
-          </div>
-        </div>
-
-        <div className="nevigate-date">
-          <h2>{renderHeader()}</h2>
-          {!isCurrentMonth && (
-             <button className="goto-today-btn" onClick={handleGotoToday}>
-                <i className='bx bx-calendar'></i> Today
-             </button>
-          )}
-          <div className="buttons">
-            <i className="bx bx-chevron-left" onClick={handlePrev}></i>
-            <i className="bx bx-chevron-right" onClick={handleNext}></i>
-          </div>
-        </div>
-        {view !== 'day' && (
-          <>
-            <div className="weekdays">
-              {daysofWeek.map((day) => <span key={day}>{day}</span>)}
-            </div>
-            <div className="calendar-grid-wrapper" style={{ height: containerHeight }}>
-                <div className="swipe-overlay"></div>
-                <motion.div 
-                    className="calendar-track"
-                    drag="x"
-                    dragConstraints={{ left: -1000, right: 1000 }}
-                    style={{ x, marginLeft: "-100%" }}
-                    onDragEnd={handleDragEnd}
-                >
-                    <div className="days-grid-slide">
-                        {renderGrid(getPrevDate(currentDate))}
-                    </div>
-                    <div className="days-grid-slide" ref={gridRef}>
-                        {renderGrid(currentDate)}
-                    </div>
-                    <div className="days-grid-slide">
-                        {renderGrid(getNextDate(currentDate))}
-                    </div>
-                </motion.div>
-            </div>
-          </>
-        )}
-      </div>
-
-      <div className="events">
-        {showEventPopup && (
-          <div 
-            className="event-popup" 
-            // Removed dynamic transformOrigin to simplify layout with larger form
-          >
-            <div className="time-input">
-              <div className="event-popup-time">
-                  <i className="bx bx-time-five"></i>
-              </div>
-              <input 
-                type="number" 
-                min="1" max="12" 
-                value={timeHours} 
-                onChange={(e) => setTimeHours(e.target.value)} 
-                onBlur={handleTimeBlur}
-                placeholder="HH"
-              />
-              <span>:</span>
-              <input 
-                type="number" 
-                min="0" max="59" 
-                value={timeMinutes} 
-                onChange={(e) => setTimeMinutes(e.target.value)} 
-                onBlur={handleTimeBlur}
-                placeholder="MM"
-              />
-              <select value={timePeriod} onChange={(e) => setTimePeriod(e.target.value)}>
-                <option value="AM">AM</option>
-                <option value="PM">PM</option>
-              </select>
-            </div>
+    <ThemeProvider theme={darkTheme}>
+      <CssBaseline />
+      <Container maxWidth="lg" sx={{ py: 4, minHeight: '100vh', display: 'flex', alignItems: 'center' }}>
+        <Paper 
+          elevation={10} 
+          sx={{ 
+            width: '100%', 
+            minHeight: '55rem', 
+            p: 4, 
+            borderRadius: '3rem', 
+            border: '1px solid #0f1319',
+            display: 'flex',
+            flexDirection: { xs: 'column', md: 'row' },
+            gap: 5,
+            position: 'relative',
+            overflow: 'hidden'
+          }}
+          ref={appRef}
+        >
+          {/* Left Side: Calendar */}
+          <Box sx={{ width: { xs: '100%', md: '40%' } }}>
+            <Box display="flex" justifyContent="space-between" alignItems="center" mb={3}>
+              <Typography variant="h3" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <EventAvailable color="primary" fontSize="inherit" /> Calendar
+              </Typography>
+              <Tooltip title="Settings">
+                <IconButton onClick={() => setShowSettings(true)}>
+                  <Settings />
+                </IconButton>
+              </Tooltip>
+            </Box>
             
-            <textarea 
-              placeholder="Enter Event Text (Maximum 60 characters)" 
-              value={eventText} 
-              maxLength={60}
-              onChange={(e) => setEventText(e.target.value)} 
-            ></textarea>
+            <ButtonGroup variant="contained" sx={{ mb: 3, bgcolor: 'background.paper', borderRadius: 2 }}>
+              <Button 
+                onClick={() => setView('month')} 
+                color={view === 'month' ? 'primary' : 'inherit'}
+                startIcon={<CalendarMonth />}
+              >
+                Month
+              </Button>
+              <Button 
+                onClick={() => setView('week')} 
+                color={view === 'week' ? 'primary' : 'inherit'}
+                startIcon={<CalendarViewWeek />}
+              >
+                Week
+              </Button>
+              <Button 
+                onClick={() => setView('day')} 
+                color={view === 'day' ? 'primary' : 'inherit'}
+                startIcon={<CalendarViewDay />}
+              >
+                Day
+              </Button>
+            </ButtonGroup>
 
-            {/* Recurrence Options */}
-            <div className="form-row">
-                <div className="form-group">
-                    <label>Repeat</label>
-                    <select className="form-select" value={recurrenceType} onChange={(e) => setRecurrenceType(e.target.value)}>
-                        <option value="none">Does not repeat</option>
-                        <option value="daily">Daily</option>
-                        <option value="weekly">Weekly</option>
-                        <option value="monthly">Monthly</option>
-                        <option value="yearly">Yearly</option>
-                    </select>
-                </div>
-                {recurrenceType !== 'none' && (
-                    <div className="form-group">
-                        <label>Interval</label>
-                        <input 
-                            type="number" 
-                            min="1" 
-                            className="form-input" 
-                            value={recurrenceInterval} 
-                            onChange={(e) => setRecurrenceInterval(e.target.value)} 
-                        />
-                    </div>
+            <Box display="flex" alignItems="center" justifyContent="space-between" my={4}>
+              <Typography variant="h4" color="text.secondary">
+                {renderHeader()}
+              </Typography>
+              <Box display="flex" gap={1}>
+                {!isCurrentMonth && (
+                  <Button 
+                    variant="contained" 
+                    color="primary" 
+                    size="small" 
+                    onClick={handleGotoToday}
+                    startIcon={<Today />}
+                    sx={{ borderRadius: 4 }}
+                  >
+                    Today
+                  </Button>
                 )}
-            </div>
+                <IconButton onClick={handlePrev} sx={{ bgcolor: '#2c3542', '&:hover': { bgcolor: 'primary.main' } }}>
+                  <ChevronLeft />
+                </IconButton>
+                <IconButton onClick={handleNext} sx={{ bgcolor: '#2c3542', '&:hover': { bgcolor: 'primary.main' } }}>
+                  <ChevronRight />
+                </IconButton>
+              </Box>
+            </Box>
+
+            {view !== 'day' && (
+              <>
+                <Grid container columns={7} mb={3}>
+                  {daysofWeek.map((day) => (
+                    <Grid item xs={1} key={day} display="flex" justifyContent="center">
+                      <Typography variant="subtitle2" color="text.secondary" sx={{ textTransform: 'uppercase', letterSpacing: '0.1rem' }}>
+                        {day}
+                      </Typography>
+                    </Grid>
+                  ))}
+                </Grid>
+                
+                <Box sx={{ overflow: 'hidden', position: 'relative', height: containerHeight, transition: 'height 0.4s ease' }}>
+                    <motion.div 
+                        style={{ x, display: 'flex', width: '300%', marginLeft: '-100%' }}
+                        drag="x"
+                        dragConstraints={{ left: -1000, right: 1000 }}
+                        onDragEnd={handleDragEnd}
+                    >
+                        <Box sx={{ width: '33.33%' }}>
+                            {renderGrid(getPrevDate(currentDate))}
+                        </Box>
+                        <Box sx={{ width: '33.33%' }} ref={gridRef}>
+                            {renderGrid(currentDate)}
+                        </Box>
+                        <Box sx={{ width: '33.33%' }}>
+                            {renderGrid(getNextDate(currentDate))}
+                        </Box>
+                    </motion.div>
+                </Box>
+              </>
+            )}
+          </Box>
+
+          {/* Right Side: Events */}
+          <Box sx={{ width: { xs: '100%', md: '60%' }, display: 'flex', flexDirection: 'column', height: '100%', overflowY: 'auto', py: 3 }}>
+            {filteredEvents.length === 0 ? (
+                <Box display="flex" flexDirection="column" alignItems="center" justifyContent="center" height="100%" gap={2} color="text.secondary">
+                    <EditCalendar sx={{ fontSize: '8rem', opacity: 0.2 }} />
+                    <Typography variant="h5" sx={{ fontFamily: 'Bebas Neue, sans-serif', letterSpacing: '0.1rem' }}>No events found</Typography>
+                </Box>
+            ) : (
+                <Stack spacing={2}>
+                  {filteredEvents.map((event, index) => (
+                    <Card key={`${event.id}-${index}`} sx={{ bgcolor: 'secondary.main', borderRadius: 2, position: 'relative' }}>
+                      <CardContent sx={{ display: 'flex', alignItems: 'center', p: 2, '&:last-child': { pb: 2 } }}>
+                        <Box sx={{ width: '25%', borderRight: '1px solid rgba(255,255,255,0.5)', pr: 2, display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+                          <Typography variant="body2" sx={{ color: 'white', fontFamily: 'Bebas Neue, sans-serif' }}>
+                            {`${monthsOfYear[event.date.getMonth()]} ${event.date.getDate()}, ${event.date.getFullYear()}`}
+                          </Typography>
+                          <Typography variant="h6" sx={{ color: 'white', fontWeight: 'bold' }}>
+                            {formatTime(event.time)}
+                          </Typography>
+                        </Box>
+                        <Box sx={{ width: '65%', pl: 2 }}>
+                          <Typography variant="body1" sx={{ color: 'white', wordBreak: 'break-word' }}>
+                            {event.text}
+                          </Typography>
+                          {event.recurrence && event.recurrence.type !== 'none' && (
+                             <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)', display: 'flex', alignItems: 'center', gap: 0.5, mt: 0.5 }}>
+                                <CheckCircle fontSize="small" /> {event.recurrence.type}
+                             </Typography>
+                          )}
+                        </Box>
+                        <Box sx={{ position: 'absolute', right: 16, top: '50%', transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', gap: 1 }}>
+                          <IconButton size="small" onClick={() => handleEditEvent(event)} sx={{ color: 'white' }}>
+                            <Edit fontSize="small" />
+                          </IconButton>
+                          <IconButton size="small" onClick={() => handleDeleteEvent(event.originalId || event.id)} sx={{ color: 'white' }}>
+                            <Delete fontSize="small" />
+                          </IconButton>
+                        </Box>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </Stack>
+            )}
+          </Box>
+        </Paper>
+
+        {/* Event Dialog */}
+        <Dialog open={showEventPopup} onClose={() => setShowEventPopup(false)} maxWidth="sm" fullWidth PaperProps={{ sx: { borderRadius: 2, bgcolor: 'background.paper' } }}>
+          <DialogTitle sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            {editingEvent ? 'Edit Event' : 'Add New Event'}
+            <IconButton onClick={() => setShowEventPopup(false)}><Close /></IconButton>
+          </DialogTitle>
+          <DialogContent>
+            <Box display="flex" alignItems="center" gap={1} mb={3} mt={1}>
+               <Box sx={{ bgcolor: 'secondary.main', p: 1, borderRadius: 1, color: 'white', display: 'flex' }}>
+                 <AccessTime />
+               </Box>
+               <TextField 
+                 type="number" 
+                 inputProps={{ min: 1, max: 12 }} 
+                 value={timeHours} 
+                 onChange={(e) => setTimeHours(e.target.value)} 
+                 onBlur={handleTimeBlur}
+                 sx={{ width: '4rem' }}
+                 variant="standard"
+               />
+               <Typography>:</Typography>
+               <TextField 
+                 type="number" 
+                 inputProps={{ min: 0, max: 59 }} 
+                 value={timeMinutes} 
+                 onChange={(e) => setTimeMinutes(e.target.value)} 
+                 onBlur={handleTimeBlur}
+                 sx={{ width: '4rem' }}
+                 variant="standard"
+               />
+               <Select 
+                 value={timePeriod} 
+                 onChange={(e) => setTimePeriod(e.target.value)} 
+                 variant="standard"
+               >
+                 <MenuItem value="AM">AM</MenuItem>
+                 <MenuItem value="PM">PM</MenuItem>
+               </Select>
+            </Box>
+
+            <TextField
+              fullWidth
+              multiline
+              rows={3}
+              placeholder="Enter Event Text (Maximum 60 characters)"
+              value={eventText}
+              onChange={(e) => setEventText(e.target.value)}
+              inputProps={{ maxLength: 60 }}
+              variant="outlined"
+              sx={{ mb: 3 }}
+            />
+
+            <Grid container spacing={2} mb={2}>
+              <Grid item xs={6}>
+                <FormControl fullWidth size="small">
+                  <InputLabel>Repeat</InputLabel>
+                  <Select value={recurrenceType} label="Repeat" onChange={(e) => setRecurrenceType(e.target.value)}>
+                    <MenuItem value="none">Does not repeat</MenuItem>
+                    <MenuItem value="daily">Daily</MenuItem>
+                    <MenuItem value="weekly">Weekly</MenuItem>
+                    <MenuItem value="monthly">Monthly</MenuItem>
+                    <MenuItem value="yearly">Yearly</MenuItem>
+                  </Select>
+                </FormControl>
+              </Grid>
+              {recurrenceType !== 'none' && (
+                <Grid item xs={6}>
+                  <TextField 
+                    fullWidth 
+                    size="small" 
+                    label="Interval" 
+                    type="number" 
+                    value={recurrenceInterval} 
+                    onChange={(e) => setRecurrenceInterval(e.target.value)} 
+                    inputProps={{ min: 1 }}
+                  />
+                </Grid>
+              )}
+            </Grid>
 
             {recurrenceType === 'monthly' && (
-                <div className="form-row">
-                    <div className="form-group">
-                        <label>On</label>
-                        <select className="form-select" value={monthlyType} onChange={(e) => setMonthlyType(e.target.value)}>
-                            <option value="date">Same date ({getOrdinal(selectedDate.getDate())})</option>
-                            <option value="day">Same day ({getOrdinal(Math.floor((selectedDate.getDate() - 1) / 7) + 1)} {daysofWeek[selectedDate.getDay()]})</option>
-                        </select>
-                    </div>
-                </div>
+               <FormControl fullWidth size="small" sx={{ mb: 2 }}>
+                  <InputLabel>On</InputLabel>
+                  <Select value={monthlyType} label="On" onChange={(e) => setMonthlyType(e.target.value)}>
+                    <MenuItem value="date">Same date ({getOrdinal(selectedDate.getDate())})</MenuItem>
+                    <MenuItem value="day">Same day ({getOrdinal(Math.floor((selectedDate.getDate() - 1) / 7) + 1)} {daysofWeek[selectedDate.getDay()]})</MenuItem>
+                  </Select>
+               </FormControl>
             )}
 
             {recurrenceType !== 'none' && (
-                <div className="form-row">
-                    <div className="form-group">
-                        <label>Ends</label>
-                        <select className="form-select" value={recurrenceEnd} onChange={(e) => setRecurrenceEnd(e.target.value)}>
-                            <option value="never">Never</option>
-                            <option value="date">On Date</option>
-                            <option value="count">After Occurrences</option>
-                        </select>
-                    </div>
-                    {recurrenceEnd === 'date' && (
-                        <div className="form-group">
-                            <label>End Date</label>
-                            <input 
-                                type="date" 
-                                className="form-input" 
-                                value={recurrenceEndDate} 
-                                onChange={(e) => setRecurrenceEndDate(e.target.value)} 
-                            />
-                        </div>
-                    )}
-                    {recurrenceEnd === 'count' && (
-                        <div className="form-group">
-                            <label>Count</label>
-                            <input 
-                                type="number" 
-                                min="1" 
-                                className="form-input" 
-                                value={recurrenceCount} 
-                                onChange={(e) => setRecurrenceCount(e.target.value)} 
-                            />
-                        </div>
-                    )}
-                </div>
+              <Grid container spacing={2} mb={2}>
+                <Grid item xs={4}>
+                   <FormControl fullWidth size="small">
+                      <InputLabel>Ends</InputLabel>
+                      <Select value={recurrenceEnd} label="Ends" onChange={(e) => setRecurrenceEnd(e.target.value)}>
+                        <MenuItem value="never">Never</MenuItem>
+                        <MenuItem value="date">On Date</MenuItem>
+                        <MenuItem value="count">After Occurrences</MenuItem>
+                      </Select>
+                   </FormControl>
+                </Grid>
+                {recurrenceEnd === 'date' && (
+                  <Grid item xs={8}>
+                    <TextField 
+                      fullWidth 
+                      size="small" 
+                      type="date" 
+                      value={recurrenceEndDate} 
+                      onChange={(e) => setRecurrenceEndDate(e.target.value)} 
+                    />
+                  </Grid>
+                )}
+                {recurrenceEnd === 'count' && (
+                  <Grid item xs={8}>
+                    <TextField 
+                      fullWidth 
+                      size="small" 
+                      label="Count" 
+                      type="number" 
+                      value={recurrenceCount} 
+                      onChange={(e) => setRecurrenceCount(e.target.value)} 
+                      inputProps={{ min: 1 }}
+                    />
+                  </Grid>
+                )}
+              </Grid>
             )}
 
-            {/* Reminder Options */}
-            <div className="form-row">
-                <div className="form-group">
-                    <label>Reminder</label>
-                    <select className="form-select" value={reminder} onChange={(e) => setReminder(e.target.value)}>
-                        <option value="0">At time of event</option>
-                        <option value="5">5 minutes before</option>
-                        <option value="10">10 minutes before</option>
-                        <option value="15">15 minutes before</option>
-                        <option value="30">30 minutes before</option>
-                        <option value="60">1 hour before</option>
-                        <option value="1440">1 day before</option>
-                    </select>
-                </div>
-            </div>
+            <FormControl fullWidth size="small">
+              <InputLabel>Reminder</InputLabel>
+              <Select value={reminder} label="Reminder" onChange={(e) => setReminder(e.target.value)}>
+                <MenuItem value="0">At time of event</MenuItem>
+                <MenuItem value="5">5 minutes before</MenuItem>
+                <MenuItem value="10">10 minutes before</MenuItem>
+                <MenuItem value="15">15 minutes before</MenuItem>
+                <MenuItem value="30">30 minutes before</MenuItem>
+                <MenuItem value="60">1 hour before</MenuItem>
+                <MenuItem value="1440">1 day before</MenuItem>
+              </Select>
+            </FormControl>
 
-            <button className="event-popup-btn" onClick={handleEventSubmit}>
-              <i className={`bx ${editingEvent ? 'bxs-edit' : 'bx-plus'}`}></i>
+          </DialogContent>
+          <DialogActions sx={{ p: 3 }}>
+            <Button 
+              fullWidth 
+              variant="contained" 
+              color="primary" 
+              onClick={handleEventSubmit}
+              startIcon={editingEvent ? <Edit /> : <Add />}
+              sx={{ py: 1.5, fontSize: '1.1rem' }}
+            >
               {editingEvent ? 'Update Event' : 'Add Event'}
-            </button>
-            <button className="close-event-popup" onClick={() => setShowEventPopup(false)} >
-              <i className="bx bx-x"></i>
-            </button>
-          </div>
-        )}
-        
-        {filteredEvents.length === 0 ? (
-            <div className="empty-state">
-                <i className="bx bx-calendar-edit"></i>
-                <p>No events found</p>
-            </div>
-        ) : (
-            filteredEvents.map((event, index) => (
-            <div className="event" key={`${event.id}-${index}`}>
-                <div className="event-date-wrapper">
-                <div className="event-date">
-                    {`${monthsOfYear[event.date.getMonth()]} ${event.date.getDate()}, ${event.date.getFullYear()}`}
-                </div>
-                <div className="event-time">{formatTime(event.time)}</div>
-                </div>
-                <div className="event-text">
-                    {event.text}
-                    {event.recurrence && event.recurrence.type !== 'none' && (
-                        <div style={{ fontSize: '0.8em', opacity: 0.7, marginTop: '0.2rem' }}>
-                            <i className='bx bx-revision'></i> {event.recurrence.type}
-                        </div>
-                    )}
-                </div>
-                <div className="event-buttons">
-                <i className="bx bxs-edit-alt" onClick={() => handleEditEvent(event)}></i>
-                <i className="bx bxs-message-alt-x" onClick={() => handleDeleteEvent(event.originalId || event.id)}></i>
-                </div>
-            </div>
-            ))
-        )}
-      </div>
+            </Button>
+          </DialogActions>
+        </Dialog>
 
-      {toast && (
-        <div className="toast-notification" role="status" aria-live="polite">
-          <span>{toast.message}</span>
-          <button className="toast-undo-btn" onClick={handleUndo}>UNDO</button>
-        </div>
-      )}
-
-      {showSettings && (
-        <div className="settings-overlay">
-          <div className="settings-modal">
-            <h2>Data Management</h2>
-            <div className="saved-indicator">
-              <i className='bx bx-check-circle'></i> Saved to browser
-            </div>
-            <div className="settings-actions">
-              <button className="settings-btn-action" onClick={requestNotificationPermission}>
-                <i className='bx bxs-bell-ring'></i> Enable Notifications
-              </button>
-              <button className="settings-btn-action" onClick={handleExport}>
-                <i className='bx bxs-download'></i> Download Calendar (.json)
-              </button>
-              <label className="settings-btn-action">
-                <i className='bx bxs-file-import'></i> Restore from Backup
+        {/* Settings Dialog */}
+        <Dialog open={showSettings} onClose={() => setShowSettings(false)} maxWidth="xs" fullWidth PaperProps={{ sx: { borderRadius: 2 } }}>
+          <DialogTitle>Data Management</DialogTitle>
+          <DialogContent>
+            <Box display="flex" alignItems="center" gap={1} mb={3} color="text.secondary">
+              <CheckCircle color="success" /> Saved to browser
+            </Box>
+            <Stack spacing={2}>
+              <Button variant="outlined" startIcon={<NotificationsActive />} onClick={requestNotificationPermission} fullWidth>
+                Enable Notifications
+              </Button>
+              <Button variant="outlined" startIcon={<Download />} onClick={handleExport} fullWidth>
+                Download Calendar (.json)
+              </Button>
+              <Button variant="outlined" component="label" startIcon={<Upload />} fullWidth>
+                Restore from Backup
                 <input type="file" accept=".json" onChange={handleImport} style={{ display: 'none' }} />
-              </label>
-            </div>
-            <button className="settings-close" onClick={() => setShowSettings(false)}>Close</button>
-          </div>
-        </div>
-      )}
-    </div>
+              </Button>
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setShowSettings(false)}>Close</Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Toast Notification */}
+        <Snackbar 
+          open={Boolean(toast)} 
+          autoHideDuration={5000} 
+          onClose={() => setToast(null)}
+          anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+        >
+          <Alert 
+            onClose={() => setToast(null)} 
+            severity={toast?.severity || 'info'} 
+            sx={{ width: '100%' }} 
+            action={
+              <Button color="inherit" size="small" onClick={handleUndo}>
+                UNDO
+              </Button>
+            }
+          >
+            {toast?.message}
+          </Alert>
+        </Snackbar>
+
+      </Container>
+    </ThemeProvider>
   )
 }
 
