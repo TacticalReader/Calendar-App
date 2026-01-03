@@ -49,6 +49,16 @@ const CALENDERAPP = () => {
   const [toast, setToast] = useState(null);
   const [showSettings, setShowSettings] = useState(false);
 
+  // New state for credit modal
+  const [showCreditModal, setShowCreditModal] = useState(false);
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShowCreditModal(true);
+    }, 3000);
+    return () => clearTimeout(timer);
+  }, []);
+
   const [events, setEvents] = useState(() => {
     try {
       const savedEvents = localStorage.getItem('calendarEvents');
@@ -600,279 +610,299 @@ const CALENDERAPP = () => {
   };
 
   return (
-    <div className={`calender-app ${view}-view`} ref={appRef}>
-      <div className="calender">
-        <div className="calender-header">
-          <h1 className="heading">
-            <i className="bx bxs-calendar-check"></i> Calendar
-          </h1>
-          <button className="settings-btn" onClick={() => setShowSettings(true)} title="Data Management">
-            <i className='bx bx-cog'></i>
-          </button>
-        </div>
-        
-        <div className="calender-header">
-           <div className="view-switcher">
-            <button onClick={() => setView('month')} className={view === 'month' ? 'active' : ''}>
-                <i className="bx bx-calendar"></i> Month
-            </button>
-            <button onClick={() => setView('week')} className={view === 'week' ? 'active' : ''}>
-                <i className="bx bx-calendar-week"></i> Week
-            </button>
-            <button onClick={() => setView('day')} className={view === 'day' ? 'active' : ''}>
-                <i className="bx bx-calendar-event"></i> Day
+    <>
+      <div className={`calender-app ${view}-view`} ref={appRef}>
+        <div className="calender">
+          <div className="calender-header">
+            <h1 className="heading">
+              <i className="bx bxs-calendar-check"></i> Calendar
+            </h1>
+            <button className="settings-btn" onClick={() => setShowSettings(true)} title="Data Management">
+              <i className='bx bx-cog'></i>
             </button>
           </div>
-        </div>
-
-        <div className="nevigate-date">
-          <h2>{renderHeader()}</h2>
-          {!isCurrentMonth && (
-             <button className="goto-today-btn" onClick={handleGotoToday}>
-                <i className='bx bx-calendar'></i> Today
-             </button>
-          )}
-          <div className="buttons">
-            <i className="bx bx-chevron-left" onClick={handlePrev}></i>
-            <i className="bx bx-chevron-right" onClick={handleNext}></i>
+          
+          <div className="calender-header">
+            <div className="view-switcher">
+              <button onClick={() => setView('month')} className={view === 'month' ? 'active' : ''}>
+                  <i className="bx bx-calendar"></i> Month
+              </button>
+              <button onClick={() => setView('week')} className={view === 'week' ? 'active' : ''}>
+                  <i className="bx bx-calendar-week"></i> Week
+              </button>
+              <button onClick={() => setView('day')} className={view === 'day' ? 'active' : ''}>
+                  <i className="bx bx-calendar-event"></i> Day
+              </button>
+            </div>
           </div>
-        </div>
-        {view !== 'day' && (
-          <>
-            <div className="weekdays">
-              {daysofWeek.map((day) => <span key={day}>{day}</span>)}
-            </div>
-            <div className="calendar-grid-wrapper" style={{ height: containerHeight }}>
-                <div className="swipe-overlay"></div>
-                <motion.div 
-                    className="calendar-track"
-                    drag="x"
-                    dragConstraints={{ left: -1000, right: 1000 }}
-                    style={{ x, marginLeft: "-100%" }}
-                    onDragEnd={handleDragEnd}
-                >
-                    <div className="days-grid-slide">
-                        {renderGrid(getPrevDate(currentDate))}
-                    </div>
-                    <div className="days-grid-slide" ref={gridRef}>
-                        {renderGrid(currentDate)}
-                    </div>
-                    <div className="days-grid-slide">
-                        {renderGrid(getNextDate(currentDate))}
-                    </div>
-                </motion.div>
-            </div>
-          </>
-        )}
-      </div>
 
-      <div className="events">
-        {filteredEvents.length === 0 ? (
-            <div className="empty-state">
-                <i className="bx bx-calendar-edit"></i>
-                <p>No events found</p>
+          <div className="nevigate-date">
+            <h2>{renderHeader()}</h2>
+            {!isCurrentMonth && (
+              <button className="goto-today-btn" onClick={handleGotoToday}>
+                  <i className='bx bx-calendar'></i> Today
+              </button>
+            )}
+            <div className="buttons">
+              <i className="bx bx-chevron-left" onClick={handlePrev}></i>
+              <i className="bx bx-chevron-right" onClick={handleNext}></i>
             </div>
-        ) : (
-            filteredEvents.map((event, index) => (
-            <div className="event" key={`${event.id}-${index}`}>
-                <div className="event-date-wrapper">
-                <div className="event-date">
-                    {`${monthsOfYear[event.date.getMonth()]} ${event.date.getDate()}, ${event.date.getFullYear()}`}
-                </div>
-                <div className="event-time">{formatTime(event.time)}</div>
-                </div>
-                <div className="event-text">
-                    {event.text}
-                    {event.recurrence && event.recurrence.type !== 'none' && (
-                        <div style={{ fontSize: '0.8em', opacity: 0.7, marginTop: '0.2rem' }}>
-                            <i className='bx bx-revision'></i> {event.recurrence.type}
-                        </div>
-                    )}
-                </div>
-                <div className="event-buttons">
-                <i className="bx bxs-edit-alt" onClick={() => handleEditEvent(event)}></i>
-                <i className="bx bxs-message-alt-x" onClick={() => handleDeleteEvent(event.originalId || event.id)}></i>
-                </div>
-            </div>
-            ))
-        )}
-      </div>
-
-      {showEventPopup && (
-          <div 
-            className="event-popup" 
-          >
-            <div className="time-input">
-              <div className="event-popup-time">
-                  <i className="bx bx-time-five"></i>
+          </div>
+          {view !== 'day' && (
+            <>
+              <div className="weekdays">
+                {daysofWeek.map((day) => <span key={day}>{day}</span>)}
               </div>
-              <input 
-                type="number" 
-                min="1" max="12" 
-                value={timeHours} 
-                onChange={(e) => { setTimeHours(e.target.value); setConflictEvent(null); }} 
-                onBlur={handleTimeBlur}
-                placeholder="HH"
-              />
-              <span>:</span>
-              <input 
-                type="number" 
-                min="0" max="59" 
-                value={timeMinutes} 
-                onChange={(e) => { setTimeMinutes(e.target.value); setConflictEvent(null); }} 
-                onBlur={handleTimeBlur}
-                placeholder="MM"
-              />
-              <select value={timePeriod} onChange={(e) => { setTimePeriod(e.target.value); setConflictEvent(null); }}>
-                <option value="AM">AM</option>
-                <option value="PM">PM</option>
-              </select>
+              <div className="calendar-grid-wrapper" style={{ height: containerHeight }}>
+                  <div className="swipe-overlay"></div>
+                  <motion.div 
+                      className="calendar-track"
+                      drag="x"
+                      dragConstraints={{ left: -1000, right: 1000 }}
+                      style={{ x, marginLeft: "-100%" }}
+                      onDragEnd={handleDragEnd}
+                  >
+                      <div className="days-grid-slide">
+                          {renderGrid(getPrevDate(currentDate))}
+                      </div>
+                      <div className="days-grid-slide" ref={gridRef}>
+                          {renderGrid(currentDate)}
+                      </div>
+                      <div className="days-grid-slide">
+                          {renderGrid(getNextDate(currentDate))}
+                      </div>
+                  </motion.div>
+              </div>
+            </>
+          )}
+        </div>
+
+        <div className="events">
+          {filteredEvents.length === 0 ? (
+              <div className="empty-state">
+                  <i className="bx bx-calendar-edit"></i>
+                  <p>No events found</p>
+              </div>
+          ) : (
+              filteredEvents.map((event, index) => (
+              <div className="event" key={`${event.id}-${index}`}>
+                  <div className="event-date-wrapper">
+                  <div className="event-date">
+                      {`${monthsOfYear[event.date.getMonth()]} ${event.date.getDate()}, ${event.date.getFullYear()}`}
+                  </div>
+                  <div className="event-time">{formatTime(event.time)}</div>
+                  </div>
+                  <div className="event-text">
+                      {event.text}
+                      {event.recurrence && event.recurrence.type !== 'none' && (
+                          <div style={{ fontSize: '0.8em', opacity: 0.7, marginTop: '0.2rem' }}>
+                              <i className='bx bx-revision'></i> {event.recurrence.type}
+                          </div>
+                      )}
+                  </div>
+                  <div className="event-buttons">
+                  <i className="bx bxs-edit-alt" onClick={() => handleEditEvent(event)}></i>
+                  <i className="bx bxs-message-alt-x" onClick={() => handleDeleteEvent(event.originalId || event.id)}></i>
+                  </div>
+              </div>
+              ))
+          )}
+        </div>
+
+        {showEventPopup && (
+            <div 
+              className="event-popup" 
+            >
+              <div className="time-input">
+                <div className="event-popup-time">
+                    <i className="bx bx-time-five"></i>
+                </div>
+                <input 
+                  type="number" 
+                  min="1" max="12" 
+                  value={timeHours} 
+                  onChange={(e) => { setTimeHours(e.target.value); setConflictEvent(null); }} 
+                  onBlur={handleTimeBlur}
+                  placeholder="HH"
+                />
+                <span>:</span>
+                <input 
+                  type="number" 
+                  min="0" max="59" 
+                  value={timeMinutes} 
+                  onChange={(e) => { setTimeMinutes(e.target.value); setConflictEvent(null); }} 
+                  onBlur={handleTimeBlur}
+                  placeholder="MM"
+                />
+                <select value={timePeriod} onChange={(e) => { setTimePeriod(e.target.value); setConflictEvent(null); }}>
+                  <option value="AM">AM</option>
+                  <option value="PM">PM</option>
+                </select>
+              </div>
+              
+              <textarea 
+                placeholder="Enter Event Text (Maximum 60 characters)" 
+                value={eventText} 
+                maxLength={60}
+                onChange={(e) => { setEventText(e.target.value); setConflictEvent(null); }} 
+              ></textarea>
+
+              {/* Recurrence Options */}
+              <div className="form-row">
+                  <div className="form-group">
+                      <label><i className='bx bx-revision'></i> Repeat</label>
+                      <select className="form-select" value={recurrenceType} onChange={(e) => setRecurrenceType(e.target.value)}>
+                          <option value="none">Does not repeat</option>
+                          <option value="daily">Daily</option>
+                          <option value="weekly">Weekly</option>
+                          <option value="monthly">Monthly</option>
+                          <option value="yearly">Yearly</option>
+                      </select>
+                  </div>
+                  {recurrenceType !== 'none' && (
+                      <div className="form-group">
+                          <label><i className='bx bx-time'></i> Interval</label>
+                          <input 
+                              type="number" 
+                              min="1" 
+                              className="form-input" 
+                              value={recurrenceInterval} 
+                              onChange={(e) => setRecurrenceInterval(e.target.value)} 
+                          />
+                      </div>
+                  )}
+              </div>
+
+              {recurrenceType === 'monthly' && (
+                  <div className="form-row">
+                      <div className="form-group">
+                          <label><i className='bx bx-calendar'></i> On</label>
+                          <select className="form-select" value={monthlyType} onChange={(e) => setMonthlyType(e.target.value)}>
+                              <option value="date">Same date ({getOrdinal(selectedDate.getDate())})</option>
+                              <option value="day">Same day ({getOrdinal(Math.floor((selectedDate.getDate() - 1) / 7) + 1)} {daysofWeek[selectedDate.getDay()]})</option>
+                          </select>
+                      </div>
+                  </div>
+              )}
+
+              {recurrenceType !== 'none' && (
+                  <div className="form-row">
+                      <div className="form-group">
+                          <label><i className='bx bx-stop-circle'></i> Ends</label>
+                          <select className="form-select" value={recurrenceEnd} onChange={(e) => setRecurrenceEnd(e.target.value)}>
+                              <option value="never">Never</option>
+                              <option value="date">On Date</option>
+                              <option value="count">After Occurrences</option>
+                          </select>
+                      </div>
+                      {recurrenceEnd === 'date' && (
+                          <div className="form-group">
+                              <label><i className='bx bx-calendar-x'></i> End Date</label>
+                              <input 
+                                  type="date" 
+                                  className="form-input" 
+                                  value={recurrenceEndDate} 
+                                  onChange={(e) => setRecurrenceEndDate(e.target.value)} 
+                              />
+                          </div>
+                      )}
+                      {recurrenceEnd === 'count' && (
+                          <div className="form-group">
+                              <label><i className='bx bx-hash'></i> Count</label>
+                              <input 
+                                  type="number" 
+                                  min="1" 
+                                  className="form-input" 
+                                  value={recurrenceCount} 
+                                  onChange={(e) => setRecurrenceCount(e.target.value)} 
+                              />
+                          </div>
+                      )}
+                  </div>
+              )}
+
+              {/* Reminder Options */}
+              <div className="form-row">
+                  <div className="form-group">
+                      <label><i className='bx bx-bell'></i> Reminder</label>
+                      <select className="form-select" value={reminder} onChange={(e) => setReminder(e.target.value)}>
+                          <option value="0">At time of event</option>
+                          <option value="5">5 minutes before</option>
+                          <option value="10">10 minutes before</option>
+                          <option value="15">15 minutes before</option>
+                          <option value="30">30 minutes before</option>
+                          <option value="60">1 hour before</option>
+                          <option value="1440">1 day before</option>
+                      </select>
+                  </div>
+              </div>
+
+              {conflictEvent && (
+                  <div className="conflict-warning">
+                      <i className='bx bx-error'></i> This overlaps with "{conflictEvent}". Save anyway?
+                  </div>
+              )}
+
+              <button className={`event-popup-btn ${conflictEvent ? 'conflict' : ''}`} onClick={handleEventSubmit}>
+                <i className={`bx ${editingEvent ? 'bxs-edit' : 'bx-plus'}`}></i>
+                {conflictEvent ? 'Save Anyway' : (editingEvent ? 'Update Event' : 'Add Event')}
+              </button>
+              <button className="close-event-popup" onClick={() => setShowEventPopup(false)} >
+                <i className="bx bx-x"></i>
+              </button>
             </div>
-            
-            <textarea 
-              placeholder="Enter Event Text (Maximum 60 characters)" 
-              value={eventText} 
-              maxLength={60}
-              onChange={(e) => { setEventText(e.target.value); setConflictEvent(null); }} 
-            ></textarea>
+          )}
 
-            {/* Recurrence Options */}
-            <div className="form-row">
-                <div className="form-group">
-                    <label><i className='bx bx-revision'></i> Repeat</label>
-                    <select className="form-select" value={recurrenceType} onChange={(e) => setRecurrenceType(e.target.value)}>
-                        <option value="none">Does not repeat</option>
-                        <option value="daily">Daily</option>
-                        <option value="weekly">Weekly</option>
-                        <option value="monthly">Monthly</option>
-                        <option value="yearly">Yearly</option>
-                    </select>
-                </div>
-                {recurrenceType !== 'none' && (
-                    <div className="form-group">
-                        <label><i className='bx bx-time'></i> Interval</label>
-                        <input 
-                            type="number" 
-                            min="1" 
-                            className="form-input" 
-                            value={recurrenceInterval} 
-                            onChange={(e) => setRecurrenceInterval(e.target.value)} 
-                        />
-                    </div>
-                )}
-            </div>
-
-            {recurrenceType === 'monthly' && (
-                <div className="form-row">
-                    <div className="form-group">
-                        <label><i className='bx bx-calendar'></i> On</label>
-                        <select className="form-select" value={monthlyType} onChange={(e) => setMonthlyType(e.target.value)}>
-                            <option value="date">Same date ({getOrdinal(selectedDate.getDate())})</option>
-                            <option value="day">Same day ({getOrdinal(Math.floor((selectedDate.getDate() - 1) / 7) + 1)} {daysofWeek[selectedDate.getDay()]})</option>
-                        </select>
-                    </div>
-                </div>
-            )}
-
-            {recurrenceType !== 'none' && (
-                <div className="form-row">
-                    <div className="form-group">
-                        <label><i className='bx bx-stop-circle'></i> Ends</label>
-                        <select className="form-select" value={recurrenceEnd} onChange={(e) => setRecurrenceEnd(e.target.value)}>
-                            <option value="never">Never</option>
-                            <option value="date">On Date</option>
-                            <option value="count">After Occurrences</option>
-                        </select>
-                    </div>
-                    {recurrenceEnd === 'date' && (
-                        <div className="form-group">
-                            <label><i className='bx bx-calendar-x'></i> End Date</label>
-                            <input 
-                                type="date" 
-                                className="form-input" 
-                                value={recurrenceEndDate} 
-                                onChange={(e) => setRecurrenceEndDate(e.target.value)} 
-                            />
-                        </div>
-                    )}
-                    {recurrenceEnd === 'count' && (
-                        <div className="form-group">
-                            <label><i className='bx bx-hash'></i> Count</label>
-                            <input 
-                                type="number" 
-                                min="1" 
-                                className="form-input" 
-                                value={recurrenceCount} 
-                                onChange={(e) => setRecurrenceCount(e.target.value)} 
-                            />
-                        </div>
-                    )}
-                </div>
-            )}
-
-            {/* Reminder Options */}
-            <div className="form-row">
-                <div className="form-group">
-                    <label><i className='bx bx-bell'></i> Reminder</label>
-                    <select className="form-select" value={reminder} onChange={(e) => setReminder(e.target.value)}>
-                        <option value="0">At time of event</option>
-                        <option value="5">5 minutes before</option>
-                        <option value="10">10 minutes before</option>
-                        <option value="15">15 minutes before</option>
-                        <option value="30">30 minutes before</option>
-                        <option value="60">1 hour before</option>
-                        <option value="1440">1 day before</option>
-                    </select>
-                </div>
-            </div>
-
-            {conflictEvent && (
-                <div className="conflict-warning">
-                    <i className='bx bx-error'></i> This overlaps with "{conflictEvent}". Save anyway?
-                </div>
-            )}
-
-            <button className={`event-popup-btn ${conflictEvent ? 'conflict' : ''}`} onClick={handleEventSubmit}>
-              <i className={`bx ${editingEvent ? 'bxs-edit' : 'bx-plus'}`}></i>
-              {conflictEvent ? 'Save Anyway' : (editingEvent ? 'Update Event' : 'Add Event')}
-            </button>
-            <button className="close-event-popup" onClick={() => setShowEventPopup(false)} >
-              <i className="bx bx-x"></i>
-            </button>
+        {toast && (
+          <div className="toast-notification" role="status" aria-live="polite">
+            <span>{toast.message}</span>
+            <button className="toast-undo-btn" onClick={handleUndo}>UNDO</button>
           </div>
         )}
 
-      {toast && (
-        <div className="toast-notification" role="status" aria-live="polite">
-          <span>{toast.message}</span>
-          <button className="toast-undo-btn" onClick={handleUndo}>UNDO</button>
-        </div>
-      )}
+        {showSettings && (
+          <div className="settings-overlay">
+            <div className="settings-modal">
+              <h2>Data Management</h2>
+              <div className="saved-indicator">
+                <i className='bx bx-check-circle'></i> Saved to browser
+              </div>
+              <div className="settings-actions">
+                <button className="settings-btn-action" onClick={requestNotificationPermission}>
+                  <i className='bx bxs-bell-ring'></i> Enable Notifications
+                </button>
+                <button className="settings-btn-action" onClick={handleExport}>
+                  <i className='bx bxs-download'></i> Download Calendar (.json)
+                </button>
+                <label className="settings-btn-action">
+                  <i className='bx bxs-file-import'></i> Restore from Backup
+                  <input type="file" accept=".json" onChange={handleImport} style={{ display: 'none' }} />
+                </label>
+              </div>
+              <button className="settings-close" onClick={() => setShowSettings(false)}>Close</button>
+            </div>
+          </div>
+        )}
+      </div>
 
-      {showSettings && (
-        <div className="settings-overlay">
-          <div className="settings-modal">
-            <h2>Data Management</h2>
-            <div className="saved-indicator">
-              <i className='bx bx-check-circle'></i> Saved to browser
+      {showCreditModal && (
+        <div className="credit-modal-overlay">
+          <div className="credit-modal-box">
+            <button className="credit-close-btn" onClick={() => setShowCreditModal(false)}>
+              <i className='bx bx-x'></i>
+            </button>
+            <div className="credit-icon">
+              <i className='bx bxs-terminal'></i>
             </div>
-            <div className="settings-actions">
-              <button className="settings-btn-action" onClick={requestNotificationPermission}>
-                <i className='bx bxs-bell-ring'></i> Enable Notifications
-              </button>
-              <button className="settings-btn-action" onClick={handleExport}>
-                <i className='bx bxs-download'></i> Download Calendar (.json)
-              </button>
-              <label className="settings-btn-action">
-                <i className='bx bxs-file-import'></i> Restore from Backup
-                <input type="file" accept=".json" onChange={handleImport} style={{ display: 'none' }} />
-              </label>
-            </div>
-            <button className="settings-close" onClick={() => setShowSettings(false)}>Close</button>
+            <p className="credit-text">This app has been designed and programmed by</p>
+            <h2 className="credit-author">Tanmay Srivastava</h2>
+            <a href="https://github.com/tacticalreader" target="_blank" rel="noopener noreferrer" className="credit-github">
+              <i className='bx bxl-github'></i> tactical reader
+            </a>
           </div>
         </div>
       )}
-    </div>
+    </>
   )
 }
 
