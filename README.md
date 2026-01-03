@@ -1,9 +1,12 @@
-
 # 📅 Calendar App
 
 > A modern, feature-rich calendar application built with React and Vite, offering comprehensive event management with recurring events, browser notifications, and seamless user experience.
 
-[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-Visitct](https://img.shields.io/badge/React-19.1.1-61DAFB?style=for-the-badge&FF?style=for-the-badge&logo=vite&logo<div align="center">
+[![Live Demo](https://img.shields.io/badge/🌐_Live_Demo-Visit-2ea44f?style=for-the-badge)](https://tacticalreader.github.io/Calendar-App/)
+[![React](https://img.shields.io/badge/React-19.1.1-61DAFB?style=for-the-badge&logo=react)](https://react.dev/)
+[![Vite](https://img.shields.io/badge/Vite-7.1.6-646CFF?style=for-the-badge&logo=vite)](https://vitejs.dev/)
+
+<div align="center">
   <img src="https://opengraph.githubassets.com/ef74d8bbaea4b3fa74497bb9b4d31c65cac7deb7c7021312b21b2f018c95508b/TacticalReader/Calendar-App" alt="Calendar App Preview" width="600px">
 </div>
 
@@ -53,6 +56,7 @@ Calendar App is a client-side calendar application that provides a complete even
 - **Create Events**: Add events with title, date, and time
 - **Edit Events**: Modify existing events with ease
 - **Delete Events**: Remove events with undo functionality
+- **Conflict Detection**: Visual warning when scheduling overlapping events
 - **Time Picker**: 12-hour format (AM/PM) time selection
 - **Character Limit**: Event titles up to 60 characters
 - **Visual Indicators**: Calendar dates highlight when events are present
@@ -96,6 +100,7 @@ Calendar App is a client-side calendar application that provides a complete even
 - **Past Date Styling**: Automatic visual distinction for past dates
 - **Empty States**: Helpful messages when no events exist
 - **Settings Panel**: Centralized data management interface
+- **Credit Modal**: Animated acknowledgment of the creator
 - **Responsive Design**: Adapts to desktop, tablet, and mobile screens
 
 ***
@@ -452,12 +457,10 @@ you may not use this file except in compliance with the License.
 
 ## 📊 Project Stats
 
-![GitHub repo size](https://img.shields.io/github/repo-size/TacticalReader/Calendar-AppTacticalReader/Calendar-App
+![GitHub repo size](https://img.shields.io/github/repo-size/TacticalReader/Calendar-App)
 
 ### ⭐ Star this repository if you find it helpful!
 
 **Made with ❤️ by TacticalReader**
 
 [🔝 Back to Top](#-calendar-app)
-
-
