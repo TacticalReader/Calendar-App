@@ -667,7 +667,38 @@ const CALENDERAPP = () => {
       </div>
 
       <div className="events">
-        {showEventPopup && (
+        {filteredEvents.length === 0 ? (
+            <div className="empty-state">
+                <i className="bx bx-calendar-edit"></i>
+                <p>No events found</p>
+            </div>
+        ) : (
+            filteredEvents.map((event, index) => (
+            <div className="event" key={`${event.id}-${index}`}>
+                <div className="event-date-wrapper">
+                <div className="event-date">
+                    {`${monthsOfYear[event.date.getMonth()]} ${event.date.getDate()}, ${event.date.getFullYear()}`}
+                </div>
+                <div className="event-time">{formatTime(event.time)}</div>
+                </div>
+                <div className="event-text">
+                    {event.text}
+                    {event.recurrence && event.recurrence.type !== 'none' && (
+                        <div style={{ fontSize: '0.8em', opacity: 0.7, marginTop: '0.2rem' }}>
+                            <i className='bx bx-revision'></i> {event.recurrence.type}
+                        </div>
+                    )}
+                </div>
+                <div className="event-buttons">
+                <i className="bx bxs-edit-alt" onClick={() => handleEditEvent(event)}></i>
+                <i className="bx bxs-message-alt-x" onClick={() => handleDeleteEvent(event.originalId || event.id)}></i>
+                </div>
+            </div>
+            ))
+        )}
+      </div>
+
+      {showEventPopup && (
           <div 
             className="event-popup" 
           >
@@ -810,37 +841,6 @@ const CALENDERAPP = () => {
             </button>
           </div>
         )}
-        
-        {filteredEvents.length === 0 ? (
-            <div className="empty-state">
-                <i className="bx bx-calendar-edit"></i>
-                <p>No events found</p>
-            </div>
-        ) : (
-            filteredEvents.map((event, index) => (
-            <div className="event" key={`${event.id}-${index}`}>
-                <div className="event-date-wrapper">
-                <div className="event-date">
-                    {`${monthsOfYear[event.date.getMonth()]} ${event.date.getDate()}, ${event.date.getFullYear()}`}
-                </div>
-                <div className="event-time">{formatTime(event.time)}</div>
-                </div>
-                <div className="event-text">
-                    {event.text}
-                    {event.recurrence && event.recurrence.type !== 'none' && (
-                        <div style={{ fontSize: '0.8em', opacity: 0.7, marginTop: '0.2rem' }}>
-                            <i className='bx bx-revision'></i> {event.recurrence.type}
-                        </div>
-                    )}
-                </div>
-                <div className="event-buttons">
-                <i className="bx bxs-edit-alt" onClick={() => handleEditEvent(event)}></i>
-                <i className="bx bxs-message-alt-x" onClick={() => handleDeleteEvent(event.originalId || event.id)}></i>
-                </div>
-            </div>
-            ))
-        )}
-      </div>
 
       {toast && (
         <div className="toast-notification" role="status" aria-live="polite">
