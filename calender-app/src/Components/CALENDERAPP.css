@@ -11,6 +11,14 @@
   box-sizing: border-box;
 }
 
+/*
+  ╔══════════════════════════════════════════════════════════╗
+  ║  BUG FIX #1 — container-type: inline-size ADDED         ║
+  ║  Without this, all cqi units throughout the file        ║
+  ║  fell back to the viewport instead of this container.   ║
+  ║  This caused completely wrong text/spacing scaling.     ║
+  ╚══════════════════════════════════════════════════════════╝
+*/
 .calender-app {
   width: 60%;
   min-width: 90vmin;
@@ -27,9 +35,10 @@
   transform-style: preserve-3d;
   transition: height 0.4s var(--ease-out-expo);
   font-family: var(--font-body);
+  container-type: inline-size; /* ← BUG FIX #1 */
 }
 
-.calender-app::after{
+.calender-app::after {
   content: "";
   position: absolute;
   bottom: -12rem;
@@ -40,10 +49,12 @@
   background: rgba(0,0,0,0.5);
   border-radius: 20rem;
   filter: blur(4rem);
+  /* pointer-events: none is implicit for ::after, but kept for clarity */
 }
 
 .calender {
-    width: 40%;
+  width: 40%;
+  min-width: 0; /* IMPROVEMENT: prevents flex child from overflowing its share */
 }
 
 .calender-header {
@@ -54,18 +65,18 @@
 }
 
 .heading {
-    font-family: var(--font-heading);
-    font-size: clamp(2rem, 4vw, 4.5rem);
-    color: #fff;
-    letter-spacing: 0.3rem;
-    padding: 1.3rem;
-    display: flex;
-    align-items: center;
-    gap: 1rem;
+  font-family: var(--font-heading);
+  font-size: clamp(2rem, 4vw, 4.5rem);
+  color: #fff;
+  letter-spacing: 0.3rem;
+  padding: 1.3rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
 }
 
 .heading i {
-    color: #ef9011;
+  color: #ef9011;
 }
 
 .view-switcher {
@@ -74,6 +85,7 @@
   background-color: #2c3542;
   padding: 0.5rem;
   border-radius: 1rem;
+  flex-shrink: 0; /* IMPROVEMENT: don't let it shrink and clip */
 }
 
 .view-switcher button {
@@ -83,17 +95,18 @@
   padding: 0.8rem 1.2rem;
   border-radius: 0.8rem;
   cursor: pointer;
-  font-size: clamp(1rem, 1cqi, 1.4rem);
+  font-size: clamp(1rem, 1.5cqi, 1.4rem); /* cqi now resolves correctly thanks to BUG FIX #1 */
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
   gap: 0.8rem;
   font-family: var(--font-body);
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .view-switcher button i {
-    font-size: 1.2em;
+  font-size: 1.2em;
 }
 
 .view-switcher button.active {
@@ -102,55 +115,64 @@
 }
 
 .nevigate-date {
-    display: flex;
-    align-items: center;
-    column-gap: 1rem;
-    margin: 3.5rem 0;
+  display: flex;
+  align-items: center;
+  column-gap: 1rem;
+  row-gap: 0.5rem;
+  margin: 3.5rem 0;
+  flex-wrap: wrap; /* IMPROVEMENT: allow wrapping so day-view's long date doesn't push arrows off-screen */
 }
 
 .nevigate-date h2 {
-    color: #bbb;
-    font-size: clamp(1.5rem, 1.5cqi, 2.5rem);
-    padding: 1.3rem;
-    white-space: nowrap;
-    font-family: var(--font-mono);
-    letter-spacing: -0.05rem;
+  color: #bbb;
+  font-size: clamp(1.2rem, 2cqi, 2.5rem); /* adjusted multiplier so range is reachable with cqi */
+  padding: 1.3rem;
+  font-family: var(--font-mono);
+  letter-spacing: -0.05rem;
+  /* IMPROVEMENT: replaced bare white-space:nowrap with overflow safety */
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: calc(100% - 10rem); /* leave room for nav arrows */
 }
 
 /* Back to Today Button */
 .goto-today-btn {
-    background: linear-gradient(135deg, #ef9011, #d67e0a);
-    color: white;
-    border: none;
-    padding: 0.5rem 1.5rem;
-    border-radius: 2rem;
-    cursor: pointer;
-    font-family: var(--font-heading);
-    font-size: 1.4rem;
-    letter-spacing: 0.1rem;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    box-shadow: 0 4px 10px rgba(239, 144, 17, 0.3);
-    transition: all 0.3s ease;
-    animation: fadeIn 0.3s ease-in-out;
+  background: linear-gradient(135deg, #ef9011, #d67e0a);
+  color: white;
+  border: none;
+  padding: 0.5rem 1.5rem;
+  border-radius: 2rem;
+  cursor: pointer;
+  font-family: var(--font-heading);
+  font-size: 1.4rem;
+  letter-spacing: 0.1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 10px rgba(239, 144, 17, 0.3);
+  transition: all 0.3s ease;
+  animation: fadeIn 0.3s ease-in-out;
+  white-space: nowrap;
 }
 
 .goto-today-btn:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 6px 15px rgba(239, 144, 17, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 15px rgba(239, 144, 17, 0.4);
 }
 
 @keyframes fadeIn {
-    from { opacity: 0; transform: translateY(5px); } 
-    to { opacity: 1; transform: translateY(0); }
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
 }
 
 .buttons {
-    display: flex;
-    column-gap: 1rem;
-    margin-left: auto;
+  display: flex;
+  column-gap: 1rem;
+  margin-left: auto;
+  flex-shrink: 0;
 }
+
 .buttons i {
   width: 3.5rem;
   height: 3.5rem;
@@ -166,93 +188,93 @@
 }
 
 .buttons i:hover {
-    background-color: #ef9011;
-    color: #fff;
+  background-color: #ef9011;
+  color: #fff;
 }
 
-.weekdays{
-    width: 100%;
-    display: flex;
-    margin: 3rem 0;
+.weekdays {
+  width: 100%;
+  display: flex;
+  margin: 3rem 0;
 }
 
 .weekdays span {
-    width: calc(100% / 7);
-    font-size: clamp(1rem, .8cqi, 1.3rem);
-    font-weight: bold;
-    text-transform: uppercase;
-    color: #78879e;
-    letter-spacing: 0.1rem;
-    display: flex;
-    justify-content: center;
-    font-family: var(--font-mono);
+  width: calc(100% / 7);
+  font-size: clamp(0.9rem, 1.2cqi, 1.3rem); /* adjusted cqi multiplier */
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #78879e;
+  letter-spacing: 0.1rem;
+  display: flex;
+  justify-content: center;
+  font-family: var(--font-mono);
 }
 
 /* Wrapper for smooth height animation */
 .calendar-grid-wrapper {
-    width: 100%;
-    position: relative;
-    overflow: hidden;
-    transition: height 0.4s var(--ease-out-expo);
+  width: 100%;
+  position: relative;
+  overflow: hidden;
+  transition: height 0.4s var(--ease-out-expo);
 }
 
 /* Swipe Track */
 .calendar-track {
-    display: flex;
-    width: 300%;
-    height: 100%;
-    touch-action: none;
+  display: flex;
+  width: 300%;
+  height: 100%;
+  touch-action: none;
 }
 
 .days-grid-slide {
-    width: 33.333%;
-    flex-shrink: 0;
+  width: 33.333%;
+  flex-shrink: 0;
 }
 
 /* Edge Shadowing Overlay */
 .swipe-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    pointer-events: none;
-    z-index: 5;
-    box-shadow: inset 20px 0 20px -10px rgba(0,0,0,0.3), inset -20px 0 20px -10px rgba(0,0,0,0.3);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 5;
+  box-shadow: inset 20px 0 20px -10px rgba(0,0,0,0.3), inset -20px 0 20px -10px rgba(0,0,0,0.3);
 }
 
 .days {
-    display: flex;
-    flex-wrap: wrap;
-    width: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
 }
 
 .days span {
-    width: calc(100% / 7);
-    height: 4rem;
-    aspect-ratio: 1;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    margin-bottom: 1rem;
-    font-size: clamp(1rem, 1cqi, 1.6rem);
-    color: #ddd;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    text-shadow: 0  .5rem 1rem rgba(0,0,0,0.2);
-    position: relative;
-    backface-visibility: hidden;
-    font-family: var(--font-mono);
+  width: calc(100% / 7);
+  height: 4rem;
+  /* IMPROVEMENT: removed conflicting aspect-ratio:1 — it fought with explicit height + width */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 1rem;
+  font-size: clamp(1rem, 1.5cqi, 1.6rem); /* adjusted multiplier */
+  color: #ddd;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-shadow: 0 .5rem 1rem rgba(0,0,0,0.2);
+  position: relative;
+  backface-visibility: hidden;
+  font-family: var(--font-mono);
 }
 
 .days span:hover {
-    transform: scale(1.02);
-    z-index: 2;
+  transform: scale(1.02);
+  z-index: 2;
 }
 
 .days span.inactive {
-    color: #3a4556;
-    cursor: default;
+  color: #3a4556;
+  cursor: default;
 }
 
 .days span.has-event::after {
@@ -269,584 +291,880 @@
 
 /* Ghost Elements for Empty Cells */
 .days span:not(.inactive):not(.has-event):hover {
-    background-color: rgba(239, 144, 17, 0.1);
-    border-radius: 50%;
-    color: #ef9011;
+  background-color: rgba(239, 144, 17, 0.1);
+  border-radius: 50%;
+  color: #ef9011;
 }
 
 .days span:not(.inactive):not(.has-event):hover::before {
-    content: '+';
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 2rem;
-    color: rgba(239, 144, 17, 0.5);
-    pointer-events: none;
+  content: '+';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 2rem;
+  color: rgba(239, 144, 17, 0.5);
+  pointer-events: none;
 }
 
-.current-day{
-    background-color: #ef9011;
-    border-radius: 50%;
-    box-shadow: 0 0 1.5rem 0.5rem rgba(239, 144, 17, 0.4);
-    color: #fff !important;
-    font-weight: 700;
+.current-day {
+  background-color: #ef9011;
+  border-radius: 50%;
+  box-shadow: 0 0 1.5rem 0.5rem rgba(239, 144, 17, 0.4);
+  color: #fff !important;
+  font-weight: 700;
 }
 
-.events{
-    width: 60%;
-    height: 100%;
-    padding: 3rem 0;
-    overflow-y: auto;
-    display: flex;
-    flex-direction: column;
+.events {
+  width: 60%;
+  height: 100%;
+  padding: 3rem 0;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* IMPROVEMENT: prevents flex child from overflowing its share */
 }
 
 /* Empty State */
 .empty-state {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    color: #78879e;
-    gap: 2rem;
-    animation: fadeIn 0.5s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  color: #78879e;
+  gap: 2rem;
+  animation: fadeIn 0.5s ease;
 }
 
 .empty-state i {
-    font-size: 8rem;
-    background: -webkit-linear-gradient(#2c3542, #1e242d);
-    -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
-    filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
+  font-size: 8rem;
+  background: -webkit-linear-gradient(#2c3542, #1e242d);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
 }
 
 .empty-state p {
-    font-size: 1.8rem;
-    font-family: var(--font-body);
-    letter-spacing: 0.1rem;
-    color: #566275;
+  font-size: 1.8rem;
+  font-family: var(--font-body);
+  letter-spacing: 0.1rem;
+  color: #566275;
 }
 
 .event-popup {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: #161b22;
-    width: clamp(30rem, 90%, 50rem);
-    height: auto;
-    max-height: 90vh;
-    overflow-y: auto;
-    padding: 3rem;
-    border-radius: 1.5rem;
-    box-shadow: 0 2rem 5rem rgba(0,0,0,0.5);
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 2rem;
-    z-index: 2000;
-    animation: popupScale 0.4s var(--ease-out-expo) forwards;
-    border: 1px solid #2c3542;
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #161b22;
+  width: clamp(30rem, 90vw, 50rem); /* IMPROVEMENT: use vw not % — fixed elements don't have a % parent */
+  height: auto;
+  max-height: 90vh;
+  overflow-y: auto;
+  padding: 3rem;
+  border-radius: 1.5rem;
+  box-shadow: 0 2rem 5rem rgba(0,0,0,0.5);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2rem;
+  z-index: 2000;
+  animation: popupScale 0.4s var(--ease-out-expo) forwards;
+  border: 1px solid #2c3542;
 }
 
 .event-popup::-webkit-scrollbar {
-    width: 0.5rem;
+  width: 0.5rem;
 }
 .event-popup::-webkit-scrollbar-thumb {
-    background-color: #2c3542;
-    border-radius: 1rem;
+  background-color: #2c3542;
+  border-radius: 1rem;
 }
 
 @keyframes popupScale {
-    from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
-    to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+  from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 }
 
-.time-input{
-      display: flex;
-      gap: 0.5rem;
-      align-items: center;
-      margin-bottom: 1rem;
-      flex-wrap: wrap;
-      justify-content: center;
+.time-input {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  justify-content: center;
 }
 
-.event-popup-time{
-    width: clamp(4rem, 4cqi, 7rem);
-    background-color: #00a3ff;
-    font-family: var(--font-mono);
-    font-size: clamp(1.5rem, 1.5cqi, 2.2rem);
-    display: flex;
-    justify-content: center;
-    box-shadow: 0 0 1.5rem 1rem rgba(0, 163, 255, 0.2);
-    color: #fff;
-    letter-spacing: 0.1rem;
-    align-items: center;
-    border-radius: 0.5rem;
-    padding: 0.5rem;
+.event-popup-time {
+  width: clamp(4rem, 5cqi, 7rem);
+  background-color: #00a3ff;
+  font-family: var(--font-mono);
+  font-size: clamp(1.5rem, 2cqi, 2.2rem); /* adjusted multiplier */
+  display: flex;
+  justify-content: center;
+  box-shadow: 0 0 1.5rem 1rem rgba(0, 163, 255, 0.2);
+  color: #fff;
+  letter-spacing: 0.1rem;
+  align-items: center;
+  border-radius: 0.5rem;
+  padding: 0.5rem;
 }
 
 /* Updated Time Input Styles for Custom Picker */
 .time-input input, .time-input select {
-    background-color: transparent;
-    border: none;
-    border-top: 0.2rem solid #00a3ff;
-    border-bottom: 0.2rem solid #00a3ff;
-    color: #fff;
-    width: clamp(4rem, 5cqi, 6rem);
-    height: 4rem;
-    text-align: center;
-    font-size: clamp(1.5rem, 1.5cqi, 1.6rem);
-    font-family: var(--font-mono);
+  background-color: transparent;
+  border: none;
+  border-top: 0.2rem solid #00a3ff;
+  border-bottom: 0.2rem solid #00a3ff;
+  color: #fff;
+  width: clamp(4rem, 6cqi, 6rem); /* adjusted */
+  height: 4rem;
+  text-align: center;
+  font-size: clamp(1.5rem, 2cqi, 1.6rem); /* adjusted */
+  font-family: var(--font-mono);
 }
 
 .time-input select {
-    cursor: pointer;
-    width: clamp(5rem, 6cqi, 7rem);
-    appearance: none;
-    text-align-last: center;
+  cursor: pointer;
+  width: clamp(5rem, 7cqi, 7rem); /* adjusted */
+  appearance: none;
+  text-align-last: center;
 }
 
 .time-input select option {
-    background-color: #161b22;
-    color: #fff;
+  background-color: #161b22;
+  color: #fff;
 }
 
 .time-input span {
-    color: #fff;
-    font-size: 2rem;
+  color: #fff;
+  font-size: 2rem;
 }
 
-.event{
-    width: 100%;
-    height: auto;
-    min-height: 7rem;
-    background-color: #00a3ff;
-    padding: 1.5rem 0;
-    border-radius: 1rem;
-    display: flex;
-    align-items: center;
-    margin-bottom: 2rem;
-    position: relative;
+.event {
+  width: 100%;
+  height: auto;
+  min-height: 7rem;
+  background-color: #00a3ff;
+  padding: 1.5rem 0;
+  border-radius: 1rem;
+  display: flex;
+  align-items: center;
+  margin-bottom: 2rem;
+  position: relative;
 }
 
 .event-date-wrapper {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    width: 25%;
-    border-right: 0.1rem solid rgba(255,255,255,0.5);
-    border-radius: 5px; 
-    padding-right: 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 25%;
+  flex-shrink: 0; /* IMPROVEMENT: don't let date column collapse */
+  border-right: 0.1rem solid rgba(255,255,255,0.5);
+  border-radius: 5px;
+  padding-right: 1rem;
 }
 
 .event-popup textarea {
-    width: 100%;
-    aspect-ratio: 5 / 2;
-    resize: none;
-    background-color: #0f1319;
-    border: 1px solid #2c3542;
-    padding: 1rem;
-    border-radius: 0.8rem;
-    color: #fff;
-    transition: all 0.3s ease;
-    font-family: var(--font-body);
-    font-size: 1.3rem;
+  width: 100%;
+  aspect-ratio: 5 / 2;
+  resize: none;
+  background-color: #0f1319;
+  border: 1px solid #2c3542;
+  padding: 1rem;
+  border-radius: 0.8rem;
+  color: #fff;
+  transition: all 0.3s ease;
+  font-family: var(--font-body);
+  font-size: 1.3rem;
 }
+
 .event-popup textarea:focus {
-    outline: none;
-    border-color: #00a3ff;
-    box-shadow: 0 0 0 2px rgba(0, 163, 255, 0.1);
+  outline: none;
+  border-color: #00a3ff;
+  box-shadow: 0 0 0 2px rgba(0, 163, 255, 0.1);
 }
 
-
-.event-popup textarea::placeholder{
-    font-size: clamp(1rem, 0.8cqi, 1.3rem);
-    color: #78879e;
+.event-popup textarea::placeholder {
+  font-size: clamp(1rem, 1.2cqi, 1.3rem); /* adjusted */
+  color: #78879e;
 }
-.event-popup textarea:focus::placeholder
-{
-    color: transparent;
+
+.event-popup textarea:focus::placeholder {
+  color: transparent;
 }
 
 /* Form Styles */
 .form-row {
-    width: 100%;
-    display: flex;
-    gap: 1.5rem;
-    justify-content: space-between;
+  width: 100%;
+  display: flex;
+  gap: 1.5rem;
+  justify-content: space-between;
+  flex-wrap: wrap; /* IMPROVEMENT: wrap on narrow popups instead of cramping */
 }
 
 .form-group {
-    display: flex;
-    flex-direction: column;
-    gap: 0.8rem;
-    flex: 1;
-    min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  flex: 1;
+  min-width: 0;
+  min-width: 12rem; /* IMPROVEMENT: don't let groups collapse below a usable width */
 }
 
 .form-group label {
-    color: #78879e;
-    font-size: 1.2rem;
-    font-family: var(--font-body);
-    font-weight: 600;
-    letter-spacing: 0.05rem;
-    display: flex;
-    align-items: center;
-    gap: 0.6rem;
-    white-space: nowrap;
+  color: #78879e;
+  font-size: 1.2rem;
+  font-family: var(--font-body);
+  font-weight: 600;
+  letter-spacing: 0.05rem;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  white-space: nowrap;
 }
 
 .form-group label i {
-    color: #00a3ff;
-    font-size: 1.4rem;
+  color: #00a3ff;
+  font-size: 1.4rem;
 }
 
 .form-select, .form-input {
-    width: 100%;
-    background-color: #0f1319;
-    border: 1px solid #2c3542;
-    color: #fff;
-    padding: 1rem 1.2rem;
-    border-radius: 0.8rem;
-    font-size: 1.3rem;
-    outline: none;
-    transition: all 0.3s ease;
-    font-family: var(--font-body);
+  width: 100%;
+  background-color: #0f1319;
+  border: 1px solid #2c3542;
+  color: #fff;
+  padding: 1rem 1.2rem;
+  border-radius: 0.8rem;
+  font-size: 1.3rem;
+  outline: none;
+  transition: all 0.3s ease;
+  font-family: var(--font-body);
 }
 
 .form-select {
-    appearance: none;
-    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300a3ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
-    background-repeat: no-repeat;
-    background-position: right 1rem center;
-    background-size: 1.5rem;
-    padding-right: 3rem;
-    cursor: pointer;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300a3ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1.5rem;
+  padding-right: 3rem;
+  cursor: pointer;
 }
 
 .form-select:hover, .form-input:hover {
-    border-color: #3a4556;
+  border-color: #3a4556;
 }
 
 .form-select:focus, .form-input:focus {
-    border-color: #00a3ff;
-    box-shadow: 0 0 0 3px rgba(0, 163, 255, 0.15);
-    background-color: #131820;
+  border-color: #00a3ff;
+  box-shadow: 0 0 0 3px rgba(0, 163, 255, 0.15);
+  background-color: #131820;
 }
 
-.event-popup-btn{
-    width: 100%;
-    height: 4.5rem;
-    background-color: #00a3ff;
-    font-family: var(--font-heading);
-    font-size: clamp(1.5rem, 1.5cqi, 2.2rem);
-    letter-spacing: 0.1rem;
-    color: #fff;
-    border: none;
-    box-shadow: 0 0 1.5rem 1rem rgba(0, 163, 255, 0.2);
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    border-radius: 0.8rem;
-    margin-top: 1rem;
+.event-popup-btn {
+  width: 100%;
+  height: 4.5rem;
+  background-color: #00a3ff;
+  font-family: var(--font-heading);
+  font-size: clamp(1.5rem, 2cqi, 2.2rem); /* adjusted multiplier */
+  letter-spacing: 0.1rem;
+  color: #fff;
+  border: none;
+  box-shadow: 0 0 1.5rem 1rem rgba(0, 163, 255, 0.2);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  border-radius: 0.8rem;
+  margin-top: 1rem;
 }
 
 .event-popup-btn.conflict {
-    background-color: #ef9011;
-    box-shadow: 0 0 1.5rem 1rem rgba(239, 144, 17, 0.2);
+  background-color: #ef9011;
+  box-shadow: 0 0 1.5rem 1rem rgba(239, 144, 17, 0.2);
 }
 
-.event-popup-btn:active{
-    transform: scale(0.98); 
-    transform: translateY(0.1rem);
- }
+.event-popup-btn:active {
+  transform: translateY(0.1rem);
+}
 
 .conflict-warning {
-    color: #ef9011;
-    font-size: 1.4rem;
-    font-family: var(--font-body);
-    letter-spacing: 0.1rem;
-    text-align: center;
-    animation: fadeIn 0.3s ease;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    padding: 0 2rem;
+  color: #ef9011;
+  font-size: 1.4rem;
+  font-family: var(--font-body);
+  letter-spacing: 0.1rem;
+  text-align: center;
+  animation: fadeIn 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0 2rem;
 }
 
-.close-event-popup{
-    position: absolute;
-    top: 1.5rem;
-    right: 1.5rem;
-    border: none;
-    background-color: transparent;
-    cursor: pointer;
+.close-event-popup {
+  position: absolute;
+  top: 1.5rem;
+  right: 1.5rem;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
 }
-.close-event-popup i{
-    font-size: 2.5rem;
-    color: #78879e;
-    transition: color 0.3s;
+
+.close-event-popup i {
+  font-size: 2.5rem;
+  color: #78879e;
+  transition: color 0.3s;
 }
+
 .close-event-popup i:hover {
-    color: #fff;
+  color: #fff;
 }
 
-
+/*
+  ╔══════════════════════════════════════════════════════════╗
+  ║  BUG FIX #2 — event-date clamp was INVERTED             ║
+  ║  clamp(1.3rem, 1cqi, 1rem) → min > max = broken!        ║
+  ║  Fixed to clamp(1rem, 1.5cqi, 1.3rem)                   ║
+  ╚══════════════════════════════════════════════════════════╝
+*/
 .event-date {
-   font-size: clamp(1.3rem ,1cqi , 1rem );
-   color: #fff;
-   padding-left: 2.5rem;
-   padding-top: 1.5rem;
-   font-family: var(--font-mono);
-   letter-spacing: -0.05rem;
-}
-.event-time {
-      font-size: clamp(1.3rem , 1cqi , 1.6rem);
-      line-height: 4rem;
-      font-weight: bold;
-      color: #fff;
-      font-family: var(--font-mono);
+  font-size: clamp(1rem, 1.5cqi, 1.3rem); /* BUG FIX #2: was clamp(1.3rem, 1cqi, 1rem) — inverted! */
+  color: #fff;
+  padding-left: 2.5rem;
+  padding-top: 1.5rem;
+  font-family: var(--font-mono);
+  letter-spacing: -0.05rem;
 }
 
-.event-text{
-    font-size: clamp(1.2rem , 1cqi , 1.4rem);
-    line-height: 2rem;
-    color: #fff;
-    width: auto;
-    flex: 1;
-    padding: 0 3rem 0 1rem;
-    overflow: break-word;
-    font-family: var(--font-body);
+.event-time {
+  font-size: clamp(1.3rem, 2cqi, 1.6rem); /* adjusted multiplier */
+  line-height: 4rem;
+  font-weight: bold;
+  color: #fff;
+  font-family: var(--font-mono);
+}
+
+/*
+  ╔══════════════════════════════════════════════════════════╗
+  ║  BUG FIX #3 — 'overflow: break-word' is INVALID CSS     ║
+  ║  overflow only accepts: hidden/scroll/auto/visible/clip  ║
+  ║  This was silently ignored → long text could overflow.   ║
+  ║  Fixed with overflow-wrap + word-break.                  ║
+  ╚══════════════════════════════════════════════════════════╝
+*/
+.event-text {
+  font-size: clamp(1.2rem, 1.8cqi, 1.4rem); /* adjusted multiplier */
+  line-height: 2rem;
+  color: #fff;
+  flex: 1;
+  min-width: 0; /* IMPROVEMENT: allow shrinking in flex context */
+  padding: 0 3rem 0 1rem;
+  overflow-wrap: break-word;  /* BUG FIX #3: was 'overflow: break-word' — invalid! */
+  word-break: break-word;
+  font-family: var(--font-body);
 }
 
 .event-buttons {
-    position: absolute;
-    top: 50%;
-    transform: translateY(-50%);
-    right: 1rem;
-    display: flex;
-    flex-direction: column;
-    row-gap: 1rem;
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  right: 1rem;
+  display: flex;
+  flex-direction: column;
+  row-gap: 1rem;
 }
 
 .event-buttons i {
-   font-size: 1.6rem;
-    color: #fff;
-    cursor: pointer;
+  font-size: 1.6rem;
+  color: #fff;
+  cursor: pointer;
 }
 
 /* Saved Indicator */
 .saved-indicator {
-    font-size: 1.2rem;
-    color: #78879e;
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    justify-content: center;
+  font-size: 1.2rem;
+  color: #78879e;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
 }
 
 /* Settings Button */
 .settings-btn {
-    background: transparent;
-    border: none;
-    color: #78879e;
-    font-size: 2rem;
-    cursor: pointer;
-    transition: color 0.3s;
+  background: transparent;
+  border: none;
+  color: #78879e;
+  font-size: 2rem;
+  cursor: pointer;
+  transition: color 0.3s;
+  flex-shrink: 0;
 }
+
 .settings-btn:hover {
-    color: #fff;
+  color: #fff;
 }
 
 /* Toast Notification */
 .toast-notification {
-    position: fixed;
-    bottom: 2rem;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: #161b22;
-    color: #fff;
-    padding: 1.5rem 2.5rem;
-    border-radius: 1rem;
-    box-shadow: 0 1rem 3rem rgba(0,0,0,0.5);
-    display: flex;
-    align-items: center;
-    gap: 2rem;
-    z-index: 1000;
-    border: 1px solid #2c3542;
-    animation: slideUp 0.3s ease-out;
+  position: fixed;
+  bottom: 2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  background-color: #161b22;
+  color: #fff;
+  padding: 1.5rem 2.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 1rem 3rem rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  gap: 2rem;
+  z-index: 3000;
+  border: 1px solid #2c3542;
+  animation: slideUp 0.3s ease-out;
+  max-width: 90vw; /* IMPROVEMENT: prevent toast from overflowing on small screens */
+  width: max-content;
 }
 
 .toast-undo-btn {
-    background: transparent;
-    border: none;
-    color: #ef9011;
-    font-weight: bold;
-    font-size: 1.4rem;
-    cursor: pointer;
-    text-transform: uppercase;
-    letter-spacing: 0.1rem;
+  background: transparent;
+  border: none;
+  color: #ef9011;
+  font-weight: bold;
+  font-size: 1.4rem;
+  cursor: pointer;
+  text-transform: uppercase;
+  letter-spacing: 0.1rem;
+  flex-shrink: 0;
 }
 
 @keyframes slideUp {
-    from { transform: translate(-50%, 100%); opacity: 0; }
-    to { transform: translate(-50%, 0); opacity: 1; }
+  from { transform: translate(-50%, 100%); opacity: 0; }
+  to   { transform: translate(-50%, 0); opacity: 1; }
 }
 
 /* Settings Modal */
 .settings-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background: rgba(0,0,0,0.8);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 2000;
-    backdrop-filter: blur(5px);
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0,0,0,0.8);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 2000;
+  backdrop-filter: blur(5px);
+  padding: 1.5rem; /* IMPROVEMENT: ensure modal has room to breathe on any screen */
 }
 
+/*
+  ╔══════════════════════════════════════════════════════════╗
+  ║  BUG FIX #5 — settings-modal overflow on mobile         ║
+  ║  clamp(30rem, 40vw, 50rem): 30rem = 480px.              ║
+  ║  On a 375px phone 480px > viewport = OVERFLOW.          ║
+  ║  Fixed with min(30rem, 90vw) as the lower bound.        ║
+  ╚══════════════════════════════════════════════════════════╝
+*/
 .settings-modal {
-    background: #1e242d;
-    padding: 3rem;
-    border-radius: 2rem;
-    border: 1px solid #2c3542;
-    width: clamp(30rem, 40vw, 50rem);
-    display: flex;
-    flex-direction: column;
-    gap: 2rem;
+  background: #1e242d;
+  padding: 3rem;
+  border-radius: 2rem;
+  border: 1px solid #2c3542;
+  width: clamp(min(30rem, 90vw), 40vw, 50rem); /* BUG FIX #5: was clamp(30rem, 40vw, 50rem) */
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
 
 .settings-modal h2 {
-    color: #fff;
-    font-family: var(--font-heading);
-    font-size: 2.5rem;
-    letter-spacing: 0.1rem;
+  color: #fff;
+  font-family: var(--font-heading);
+  font-size: 2.5rem;
+  letter-spacing: 0.1rem;
 }
 
 .settings-actions {
-    display: flex;
-    flex-direction: column;
-    gap: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
 }
 
 .settings-btn-action {
-    background: #2c3542;
-    color: #fff;
-    border: none;
-    padding: 1.5rem;
-    border-radius: 1rem;
-    font-size: 1.4rem;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 1rem;
-    transition: background 0.3s;
+  background: #2c3542;
+  color: #fff;
+  border: none;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  font-size: 1.4rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  transition: background 0.3s;
+  font-family: var(--font-body);
 }
 
 .settings-btn-action:hover {
-    background: #00a3ff;
+  background: #00a3ff;
 }
 
 .settings-close {
-    background: transparent;
-    border: 1px solid #78879e;
-    color: #78879e;
-    padding: 1rem;
-    border-radius: 1rem;
-    cursor: pointer;
-    margin-top: 1rem;
+  background: transparent;
+  border: 1px solid #78879e;
+  color: #78879e;
+  padding: 1rem;
+  border-radius: 1rem;
+  cursor: pointer;
+  margin-top: 1rem;
+  font-family: var(--font-body);
+  font-size: 1.3rem;
+  transition: all 0.3s ease;
 }
 
+.settings-close:hover {
+  border-color: #fff;
+  color: #fff;
+}
+
+/* ================================================================
+   IMPROVEMENT: Intermediate breakpoint (1100px)
+   Reduce column-gap before the full vertical stacking kicks in.
+   Without this, the gap was a massive 5rem at ~900px width.
+   ================================================================ */
+@media (max-width: 1100px) {
+  .calender-app {
+    column-gap: 3rem;
+    padding: 2.5rem;
+  }
+}
+
+/* ================================================================
+   TABLET + MOBILE (≤850px) — Stack layout vertically
+   ================================================================ */
 @media (max-width: 850px) {
   .calender-app {
-    height: auto;
     flex-direction: column;
     row-gap: 2rem;
     width: 95%;
     min-width: auto;
     padding: 2rem;
+    border-radius: 2rem;
+    border-width: 0.4rem; /* BUG FIX #4: was 1rem (16px!) on mobile — huge waste of space */
   }
+
+  /*
+    IMPROVEMENT: hide the ::after drop-shadow on mobile.
+    bottom: -12rem means it extends way below the card, causing
+    unnecessary vertical scroll on mobile browsers.
+  */
+  .calender-app::after {
+    display: none;
+  }
+
   .calender {
     width: 100%;
     margin: 0;
   }
-  .nevigate-date{
+
+  .heading {
+    font-size: clamp(2rem, 6vw, 3.5rem);
+    padding: 0.8rem;
+  }
+
+  .nevigate-date {
     margin: 1rem 0;
   }
-  .weekdays{
+
+  .nevigate-date h2 {
+    font-size: clamp(1.2rem, 3.5vw, 2rem);
+    padding: 0.8rem;
+    max-width: calc(100% - 9rem);
+    /* allow wrapping on day-view so "Wednesday, April 22, 2026" doesn't overflow */
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .weekdays {
     margin: 1rem 0;
   }
+
+  .weekdays span {
+    font-size: clamp(0.8rem, 2.2vw, 1.1rem);
+  }
+
+  .days span {
+    height: 3.5rem; /* IMPROVEMENT: reduce cell height on tablet so grid feels proportionate */
+    margin-bottom: 0.6rem;
+    font-size: clamp(0.9rem, 2.5vw, 1.3rem);
+  }
+
   .events {
     width: 100%;
     margin: 0;
-  }
-  .event-popup{
-    width: 90%;
-    max-height: 80vh;
+    padding: 1rem 0;
   }
 
-  .event-popup-time{
-    width: clamp(5rem, 10cqi, 8rem);
-    font-size: clamp(1.5rem, 3cqi, 2.2rem);
+  .event-popup {
+    width: min(90vw, 50rem);
+    max-height: 85vh;
+    padding: 2rem;
+    gap: 1.5rem;
   }
 
-  .time-input input, .time-input select{
-    width: clamp(5rem, 8cqi, 7rem);
-    font-size: clamp(1.5rem, 3cqi, 2.2rem);
+  .event-popup-time {
+    width: clamp(4rem, 8vw, 6rem);
+    font-size: clamp(1.4rem, 4vw, 2.2rem);
   }
-  .event-popup textarea{
+
+  .time-input input, .time-input select {
+    width: clamp(4rem, 7vw, 6rem);
+    font-size: clamp(1.3rem, 3.5vw, 2rem);
+  }
+
+  .event-popup textarea {
     width: 100%;
-}
-  .event-popup textarea::placeholder{
-   font-size: clamp(1rem, 1.5cqi, 2rem);
-}
-.event-popup-btn{
-   width: 100%;
-    font-size: clamp(1.5rem, 3cqi, 2.2rem);
-  }
-  .event-date{
-    font-size: clamp(1rem , 1.4cqi , 1.2rem );
   }
 
-.event-time{
-    font-size: clamp(1rem , 2cqi , 1.6rem );
+  .event-popup textarea::placeholder {
+    font-size: clamp(1rem, 2.5vw, 1.5rem);
   }
-  .event-text{
-    font-size: clamp(1rem , 2.4cqi , 1.4rem );
+
+  .event-popup-btn {
+    width: 100%;
+    font-size: clamp(1.5rem, 4vw, 2.2rem);
+  }
+
+  .event-date {
+    font-size: clamp(0.9rem, 2vw, 1.2rem);
+  }
+
+  .event-time {
+    font-size: clamp(1rem, 2.5vw, 1.5rem);
+    line-height: 3rem;
+  }
+
+  .event-text {
+    font-size: clamp(1rem, 2.5vw, 1.4rem);
+  }
+
+  /* IMPROVEMENT: form rows should stack on mobile; two columns in a narrow popup = cramped */
+  .form-row {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .form-group {
+    min-width: unset;
+    width: 100%;
+  }
+
+  /* BUG FIX #5 (mobile override): settings-modal width */
+  .settings-modal {
+    width: 90vw;
+    padding: 2rem;
   }
 }
 
+/* ================================================================
+   SMALL MOBILE (≤500px)
+   ================================================================ */
 @media (max-width: 500px) {
-  .calender-app{
-    /* Aspect ratio removed */
+  .calender-app {
+    width: 98%;
+    padding: 1.5rem;
+    border-radius: 1.5rem;
+    border-width: 0.25rem;
+    row-gap: 1.5rem;
   }
+
   .calender {
     width: 100%;
   }
-  .event-popup{
-    width: 95%;
+
+  .heading {
+    font-size: clamp(1.8rem, 7vw, 2.8rem);
+    letter-spacing: 0.15rem;
+    padding: 0.6rem;
   }
-  .events{
+
+  .nevigate-date {
+    margin: 0.5rem 0;
+  }
+
+  .nevigate-date h2 {
+    font-size: clamp(1.1rem, 3.5vw, 1.8rem);
+    padding: 0.6rem;
+    max-width: calc(100% - 8.5rem);
+  }
+
+  .goto-today-btn {
+    font-size: 1.1rem;
+    padding: 0.4rem 1rem;
+  }
+
+  .buttons i {
+    width: 3rem;
+    height: 3rem;
+    font-size: 1.6rem;
+  }
+
+  .weekdays {
+    margin: 0.5rem 0;
+  }
+
+  .weekdays span {
+    font-size: clamp(0.7rem, 2vw, 1rem);
+    letter-spacing: 0;
+  }
+
+  .days span {
+    height: 3rem;
+    margin-bottom: 0.3rem;
+    font-size: clamp(0.85rem, 2.5vw, 1.2rem);
+  }
+
+  .event-popup {
+    width: min(95vw, 50rem);
+    padding: 1.5rem;
+    max-height: 88vh;
+    gap: 1.2rem;
+  }
+
+  .events {
     width: 100%;
   }
-}
 
-@media (max-width: 350px) {
-  .calender-app{
-    /* Aspect ratio removed */
+  /* IMPROVEMENT: reduce left padding on event date/time so text has more room */
+  .event-date {
+    padding-left: 1rem;
+    padding-top: 1rem;
+    font-size: clamp(0.8rem, 2vw, 1.1rem);
+  }
+
+  .event-time {
+    line-height: 2.5rem;
+  }
+
+  .event-text {
+    padding: 0 2.5rem 0 0.8rem;
+  }
+
+  .settings-modal {
+    width: 94vw;
+    padding: 1.5rem;
+    border-radius: 1.5rem;
+    gap: 1.5rem;
+  }
+
+  .settings-modal h2 {
+    font-size: 2rem;
+  }
+
+  .settings-btn-action {
+    padding: 1.2rem;
+    font-size: 1.3rem;
   }
 }
 
-/* Credit Modal Styles */
+/* ================================================================
+   EXTRA SMALL MOBILE (≤350px)
+   ================================================================ */
+@media (max-width: 350px) {
+  .calender-app {
+    padding: 1rem;
+    border-radius: 1rem;
+    border-width: 0.2rem;
+    row-gap: 1rem;
+  }
+
+  .heading {
+    font-size: 1.8rem;
+    padding: 0.5rem;
+    gap: 0.6rem;
+  }
+
+  .days span {
+    height: 2.8rem;
+    font-size: 0.85rem;
+  }
+
+  .weekdays span {
+    font-size: 0.65rem;
+    letter-spacing: 0;
+  }
+
+  /* IMPROVEMENT: icon-only view-switcher at 350px — text + icon together is too wide */
+  .view-switcher {
+    gap: 0.3rem;
+  }
+
+  .view-switcher button {
+    padding: 0.7rem;
+    gap: 0;
+    font-size: 0; /* hide text */
+  }
+
+  .view-switcher button i {
+    font-size: 1.6rem; /* restore icon */
+  }
+
+  .nevigate-date h2 {
+    font-size: 1rem;
+    padding: 0.4rem;
+    max-width: calc(100% - 7.5rem);
+  }
+
+  .buttons i {
+    width: 2.6rem;
+    height: 2.6rem;
+    font-size: 1.4rem;
+  }
+
+  .event-popup {
+    padding: 1.2rem;
+    gap: 1rem;
+  }
+
+  .event-date-wrapper {
+    width: 30%;
+  }
+
+  .event-date {
+    padding-left: 0.5rem;
+    font-size: 0.8rem;
+  }
+
+  .event-time {
+    font-size: 0.9rem;
+    line-height: 2rem;
+  }
+
+  .event-text {
+    font-size: 0.9rem;
+    padding: 0 2rem 0 0.5rem;
+  }
+
+  .event-buttons i {
+    font-size: 1.3rem;
+  }
+
+  .settings-modal {
+    padding: 1.2rem;
+    gap: 1rem;
+    border-radius: 1.2rem;
+  }
+}
+
+/* ================================================================
+   Credit Modal Styles
+   ================================================================ */
 .credit-modal-overlay {
   position: fixed;
   top: 0;
@@ -865,9 +1183,17 @@
 
 @keyframes fadeInModal {
   from { opacity: 0; }
-  to { opacity: 1; }
+  to   { opacity: 1; }
 }
 
+/*
+  ╔══════════════════════════════════════════════════════════╗
+  ║  BUG FIX #6 — credit-modal-box fixed width overflow     ║
+  ║  width: 500px with no mobile handling. On a 375px phone ║
+  ║  this straight-up overflows the screen.                 ║
+  ║  Fixed: max-width: 100% + padding: 0 on the box.        ║
+  ╚══════════════════════════════════════════════════════════╝
+*/
 .credit-modal-box {
   position: relative;
   z-index: 1;
@@ -877,8 +1203,7 @@
   border-radius: 2rem;
   text-align: center;
   color: #fff;
-  max-width: 100%;
-  width: 500px;
+  width: min(500px, 100%); /* BUG FIX #6: was a hard 500px — overflows on phones */
   box-shadow: 0 20px 50px rgba(0,0,0,0.5);
   border: 5px solid transparent;
   overflow: hidden;
@@ -897,15 +1222,9 @@
 }
 
 @keyframes animatedgradient {
-	0% {
-		background-position: 0% 50%;
-	}
-	50% {
-		background-position: 100% 50%;
-	}
-	100% {
-		background-position: 0% 50%;
-	}
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
 }
 
 .credit-icon {
@@ -970,8 +1289,43 @@
   font-size: 2.5rem;
   cursor: pointer;
   transition: color 0.3s;
+  /* IMPROVEMENT: larger tap target on mobile */
+  padding: 0.5rem;
 }
 
 .credit-close-btn:hover {
   color: #fff;
+}
+
+/* IMPROVEMENT: credit modal mobile adjustments */
+@media (max-width: 600px) {
+  .credit-modal-overlay {
+    padding: 1.5rem;
+    justify-content: center; /* center horizontally on mobile */
+    align-items: flex-end;   /* keep it pinned to bottom like on desktop */
+  }
+
+  .credit-modal-box {
+    padding: 3rem 2rem;
+    border-radius: 1.5rem;
+  }
+
+  .credit-icon {
+    font-size: 4rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .credit-text {
+    font-size: 1.4rem;
+  }
+
+  .credit-author {
+    font-size: 3rem;
+    letter-spacing: 1px;
+  }
+
+  .credit-github {
+    font-size: 1.2rem;
+    padding: 0.8rem 1.5rem;
+  }
 }
