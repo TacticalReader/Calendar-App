@@ -144,14 +144,6 @@ const CALENDERAPP = () => {
       
       events.forEach(event => {
         const reminderMinutes = event.reminder || 10;
-        // We want to notify if (EventTime - Reminder) is close to Now
-        // Find the next occurrence strictly after (Now - Reminder - Buffer)
-        // Actually, we want the occurrence where (OccurrenceTime - Reminder) is roughly Now.
-        // So we look for occurrences around Now + Reminder.
-        
-        const targetTime = new Date(now.getTime() + reminderMinutes * 60000);
-        
-        // Get next occurrence relative to now
         const nextOccurrence = getNextOccurrence(event, now);
         
         if (nextOccurrence) {
@@ -162,8 +154,6 @@ const CALENDERAPP = () => {
             const timeDiff = occDate.getTime() - now.getTime();
             const reminderMs = reminderMinutes * 60000;
 
-            // Trigger if within the minute of the reminder time
-            // i.e., Time until event is between (Reminder) and (Reminder - 1 min)
             if (timeDiff <= reminderMs && timeDiff > (reminderMs - 60000)) {
                  new Notification("Upcoming Event", {
                     body: `${event.text} in ${reminderMinutes} minutes`,
@@ -174,7 +164,7 @@ const CALENDERAPP = () => {
       });
     };
 
-    const intervalId = setInterval(checkEvents, 60000); // Check every minute
+    const intervalId = setInterval(checkEvents, 60000);
     checkEvents();
 
     return () => clearInterval(intervalId);
@@ -269,7 +259,6 @@ const CALENDERAPP = () => {
     normalizedDate.setHours(0, 0, 0, 0);
 
     if (appRef.current && e.target) {
-        // Simple centering logic or keep existing
         setPopupPosition({ x: 0, y: 0 });
     }
 
@@ -333,7 +322,6 @@ const CALENDERAPP = () => {
         
         const conflict = dayEvents.find(e => {
             if (e.time !== time24) return false;
-            // If editing, ignore the event itself
             if (editingEvent && (e.id === editingEvent.id || e.originalId === editingEvent.id)) return false;
             return true;
         });
@@ -368,9 +356,6 @@ const CALENDERAPP = () => {
 
     let updatedEvents;
     if (editingEvent) {
-      // If editing, we update the master event. 
-      // Note: In a full app, we might ask "Update this instance" vs "Update series".
-      // Here we update the series (master event).
       updatedEvents = events.map(event =>
         event.id === editingEvent.id ? newEvent : event
       );
@@ -386,17 +371,12 @@ const CALENDERAPP = () => {
   }
 
   const handleEditEvent = (event) => {
-    // If it's an occurrence, we edit the master event (event.originalId)
-    // But for simplicity in this UI, we load the data from the clicked event instance
-    // which contains the master data merged in.
-    
     setSelectedDate(new Date(event.date));
     parseTimeForUI(event.time);
     setEventText(event.text);
     setEditingEvent(event);
     setConflictEvent(null);
     
-    // Load Recurrence & Reminder state
     if (event.recurrence) {
         setRecurrenceType(event.recurrence.type || 'none');
         setRecurrenceInterval(event.recurrence.interval || 1);
@@ -414,7 +394,6 @@ const CALENDERAPP = () => {
   }
 
   const handleDeleteEvent = (eventId) => {
-    // Delete the master event
     const eventToDelete = events.find(e => e.id === eventId);
     const newEvents = events.filter(event => event.id !== eventId);
     saveEvents(newEvents);
@@ -482,10 +461,7 @@ const CALENDERAPP = () => {
       } else if (view === 'week') {
           start.setDate(start.getDate() - start.getDay());
           end.setDate(end.getDate() + (6 - end.getDay()));
-      } else {
-          // Day view
       }
-      // Add buffer for safety
       start.setHours(0,0,0,0);
       end.setHours(23,59,59,999);
       return { start, end };
@@ -493,7 +469,6 @@ const CALENDERAPP = () => {
 
   // Generate events for the current view
   const filteredEvents = useMemo(() => {
-    // Expand recurring events
     const expandedEvents = getOccurrences(events, visibleRange.start, visibleRange.end);
 
     let filtered = [];
@@ -513,7 +488,7 @@ const CALENDERAPP = () => {
     });
   }, [view, events, currentDate, visibleRange]);
 
-  // Generate events for Month Grid indicators (always needs month range)
+  // Generate events for Month Grid indicators
   const eventsByDay = useMemo(() => {
     const startOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
     const endOfMonth = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 0);
@@ -529,6 +504,17 @@ const CALENDERAPP = () => {
     }, {});
   }, [events, currentDate]);
 
+  /*
+    FIX — renderHeader() for day view previously returned:
+      currentDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })
+    which produces strings like "Wednesday, November 12, 2025" — up to 30 characters.
+    In a 40%-wide sidebar using a wide font, this always overflowed.
+
+    Now uses { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' }
+    which produces "Wed, Nov 12, 2025" — about half the character count.
+    Combined with the CSS fix (font-body, flex:1 1 auto, no max-width cap),
+    this guarantees no clipping on any desktop width.
+  */
   const renderHeader = () => {
     if (view === 'month') {
       return `${monthsOfYear[currentDate.getMonth()]}, ${currentDate.getFullYear()}`;
@@ -537,10 +523,16 @@ const CALENDERAPP = () => {
       const weekDays = getWeekDays(currentDate);
       const start = weekDays[0];
       const end = weekDays[6];
-      return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} - ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
+      return `${start.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} – ${end.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}`;
     }
     if (view === 'day') {
-      return currentDate.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+      // FIX: use abbreviated format to prevent overflow in narrow sidebar
+      return currentDate.toLocaleDateString('en-US', {
+        weekday: 'short',
+        month: 'short',
+        day: 'numeric',
+        year: 'numeric'
+      });
     }
   };
 
@@ -602,7 +594,6 @@ const CALENDERAPP = () => {
 
   const isCurrentMonth = currentDate.getMonth() === today.getMonth() && currentDate.getFullYear() === today.getFullYear();
 
-  // Helper to get ordinal suffix for display
   const getOrdinal = (n) => {
       const s = ["th", "st", "nd", "rd"];
       const v = n % 100;
@@ -710,9 +701,7 @@ const CALENDERAPP = () => {
         </div>
 
         {showEventPopup && (
-            <div 
-              className="event-popup" 
-            >
+            <div className="event-popup">
               <div className="time-input">
                 <div className="event-popup-time">
                     <i className="bx bx-time-five"></i>
