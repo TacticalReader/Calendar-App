@@ -11,14 +11,6 @@
   box-sizing: border-box;
 }
 
-/*
-  ╔══════════════════════════════════════════════════════════╗
-  ║  BUG FIX #1 — container-type: inline-size ADDED         ║
-  ║  Without this, all cqi units throughout the file        ║
-  ║  fell back to the viewport instead of this container.   ║
-  ║  This caused completely wrong text/spacing scaling.     ║
-  ╚══════════════════════════════════════════════════════════╝
-*/
 .calender-app {
   width: 60%;
   min-width: 90vmin;
@@ -35,7 +27,7 @@
   transform-style: preserve-3d;
   transition: height 0.4s var(--ease-out-expo);
   font-family: var(--font-body);
-  container-type: inline-size; /* ← BUG FIX #1 */
+  container-type: inline-size;
 }
 
 .calender-app::after {
@@ -49,12 +41,11 @@
   background: rgba(0,0,0,0.5);
   border-radius: 20rem;
   filter: blur(4rem);
-  /* pointer-events: none is implicit for ::after, but kept for clarity */
 }
 
 .calender {
   width: 40%;
-  min-width: 0; /* IMPROVEMENT: prevents flex child from overflowing its share */
+  min-width: 0;
 }
 
 .calender-header {
@@ -85,7 +76,7 @@
   background-color: #2c3542;
   padding: 0.5rem;
   border-radius: 1rem;
-  flex-shrink: 0; /* IMPROVEMENT: don't let it shrink and clip */
+  flex-shrink: 0;
 }
 
 .view-switcher button {
@@ -95,7 +86,7 @@
   padding: 0.8rem 1.2rem;
   border-radius: 0.8rem;
   cursor: pointer;
-  font-size: clamp(1rem, 1.5cqi, 1.4rem); /* cqi now resolves correctly thanks to BUG FIX #1 */
+  font-size: clamp(1rem, 1.5cqi, 1.4rem);
   transition: all 0.3s ease;
   display: flex;
   align-items: center;
@@ -114,26 +105,51 @@
   color: #fff;
 }
 
+/*
+  FIX — .nevigate-date redesigned to handle long month names on desktop.
+
+  ROOT CAUSE: The h2 used font-mono (wide per-character) + letter-spacing
+  + clamp up to 2.5rem. Long names like "November, 2026" (13 chars in mono)
+  hit the max-width cap → ellipsis clipping. The "Today" button made it worse
+  by stealing additional space from an already constrained flex row.
+
+  SOLUTION:
+  1. Switch the layout to flex-wrap so the date row can break into two lines
+     when the Today button is present — instead of compressing the h2.
+  2. Remove max-width from h2 entirely; let flex-wrap do the job.
+  3. Reduce the clamp ceiling from 2.5rem to 2rem so long names never overflow
+     even at the widest cqi.
+  4. Keep white-space: nowrap on h2 so the month name itself never wraps
+     mid-word, but allow the outer flex row to wrap.
+  5. Use font-family: var(--font-body) for the date header — Urbanist is
+     proportional and naturally narrower than JetBrains Mono, giving long
+     names the breathing room they need on desktop.
+*/
 .nevigate-date {
   display: flex;
   align-items: center;
   column-gap: 1rem;
   row-gap: 0.5rem;
   margin: 3.5rem 0;
-  flex-wrap: wrap; /* IMPROVEMENT: allow wrapping so day-view's long date doesn't push arrows off-screen */
+  flex-wrap: wrap;
 }
 
 .nevigate-date h2 {
   color: #bbb;
-  font-size: clamp(1.2rem, 2cqi, 2.5rem); /* adjusted multiplier so range is reachable with cqi */
+  /* Reduced ceiling from 2.5rem → 2rem so "November, 2026" stays within bounds */
+  font-size: clamp(1.2rem, 2cqi, 2rem);
   padding: 1.3rem;
-  font-family: var(--font-mono);
-  letter-spacing: -0.05rem;
-  /* IMPROVEMENT: replaced bare white-space:nowrap with overflow safety */
+  /* Switched to body font — proportional fonts are naturally narrower than mono,
+     giving long names like "November" / "September" the horizontal room they need */
+  font-family: var(--font-body);
+  font-weight: 600;
+  letter-spacing: 0.02rem;
   white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  max-width: calc(100% - 10rem); /* leave room for nav arrows */
+  /* Remove max-width cap — flex-wrap on the parent handles overflow instead */
+  overflow: visible;
+  text-overflow: unset;
+  flex: 1 1 auto; /* grow to fill, shrink if needed, but never clip */
+  min-width: 0;
 }
 
 /* Back to Today Button */
@@ -154,6 +170,7 @@
   transition: all 0.3s ease;
   animation: fadeIn 0.3s ease-in-out;
   white-space: nowrap;
+  flex-shrink: 0; /* Never shrink the Today button */
 }
 
 .goto-today-btn:hover {
@@ -170,7 +187,7 @@
   display: flex;
   column-gap: 1rem;
   margin-left: auto;
-  flex-shrink: 0;
+  flex-shrink: 0; /* Never shrink nav arrows */
 }
 
 .buttons i {
@@ -200,7 +217,7 @@
 
 .weekdays span {
   width: calc(100% / 7);
-  font-size: clamp(0.9rem, 1.2cqi, 1.3rem); /* adjusted cqi multiplier */
+  font-size: clamp(0.9rem, 1.2cqi, 1.3rem);
   font-weight: bold;
   text-transform: uppercase;
   color: #78879e;
@@ -252,12 +269,11 @@
 .days span {
   width: calc(100% / 7);
   height: 4rem;
-  /* IMPROVEMENT: removed conflicting aspect-ratio:1 — it fought with explicit height + width */
   display: flex;
   justify-content: center;
   align-items: center;
   margin-bottom: 1rem;
-  font-size: clamp(1rem, 1.5cqi, 1.6rem); /* adjusted multiplier */
+  font-size: clamp(1rem, 1.5cqi, 1.6rem);
   color: #ddd;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -289,7 +305,6 @@
   border-radius: 50%;
 }
 
-/* Ghost Elements for Empty Cells */
 .days span:not(.inactive):not(.has-event):hover {
   background-color: rgba(239, 144, 17, 0.1);
   border-radius: 50%;
@@ -322,7 +337,7 @@
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  min-width: 0; /* IMPROVEMENT: prevents flex child from overflowing its share */
+  min-width: 0;
 }
 
 /* Empty State */
@@ -358,7 +373,7 @@
   left: 50%;
   transform: translate(-50%, -50%);
   background-color: #161b22;
-  width: clamp(30rem, 90vw, 50rem); /* IMPROVEMENT: use vw not % — fixed elements don't have a % parent */
+  width: clamp(30rem, 90vw, 50rem);
   height: auto;
   max-height: 90vh;
   overflow-y: auto;
@@ -400,7 +415,7 @@
   width: clamp(4rem, 5cqi, 7rem);
   background-color: #00a3ff;
   font-family: var(--font-mono);
-  font-size: clamp(1.5rem, 2cqi, 2.2rem); /* adjusted multiplier */
+  font-size: clamp(1.5rem, 2cqi, 2.2rem);
   display: flex;
   justify-content: center;
   box-shadow: 0 0 1.5rem 1rem rgba(0, 163, 255, 0.2);
@@ -411,23 +426,22 @@
   padding: 0.5rem;
 }
 
-/* Updated Time Input Styles for Custom Picker */
 .time-input input, .time-input select {
   background-color: transparent;
   border: none;
   border-top: 0.2rem solid #00a3ff;
   border-bottom: 0.2rem solid #00a3ff;
   color: #fff;
-  width: clamp(4rem, 6cqi, 6rem); /* adjusted */
+  width: clamp(4rem, 6cqi, 6rem);
   height: 4rem;
   text-align: center;
-  font-size: clamp(1.5rem, 2cqi, 1.6rem); /* adjusted */
+  font-size: clamp(1.5rem, 2cqi, 1.6rem);
   font-family: var(--font-mono);
 }
 
 .time-input select {
   cursor: pointer;
-  width: clamp(5rem, 7cqi, 7rem); /* adjusted */
+  width: clamp(5rem, 7cqi, 7rem);
   appearance: none;
   text-align-last: center;
 }
@@ -460,7 +474,7 @@
   flex-direction: column;
   align-items: center;
   width: 25%;
-  flex-shrink: 0; /* IMPROVEMENT: don't let date column collapse */
+  flex-shrink: 0;
   border-right: 0.1rem solid rgba(255,255,255,0.5);
   border-radius: 5px;
   padding-right: 1rem;
@@ -487,7 +501,7 @@
 }
 
 .event-popup textarea::placeholder {
-  font-size: clamp(1rem, 1.2cqi, 1.3rem); /* adjusted */
+  font-size: clamp(1rem, 1.2cqi, 1.3rem);
   color: #78879e;
 }
 
@@ -495,13 +509,12 @@
   color: transparent;
 }
 
-/* Form Styles */
 .form-row {
   width: 100%;
   display: flex;
   gap: 1.5rem;
   justify-content: space-between;
-  flex-wrap: wrap; /* IMPROVEMENT: wrap on narrow popups instead of cramping */
+  flex-wrap: wrap;
 }
 
 .form-group {
@@ -509,8 +522,7 @@
   flex-direction: column;
   gap: 0.8rem;
   flex: 1;
-  min-width: 0;
-  min-width: 12rem; /* IMPROVEMENT: don't let groups collapse below a usable width */
+  min-width: 12rem;
 }
 
 .form-group label {
@@ -568,7 +580,7 @@
   height: 4.5rem;
   background-color: #00a3ff;
   font-family: var(--font-heading);
-  font-size: clamp(1.5rem, 2cqi, 2.2rem); /* adjusted multiplier */
+  font-size: clamp(1.5rem, 2cqi, 2.2rem);
   letter-spacing: 0.1rem;
   color: #fff;
   border: none;
@@ -623,15 +635,8 @@
   color: #fff;
 }
 
-/*
-  ╔══════════════════════════════════════════════════════════╗
-  ║  BUG FIX #2 — event-date clamp was INVERTED             ║
-  ║  clamp(1.3rem, 1cqi, 1rem) → min > max = broken!        ║
-  ║  Fixed to clamp(1rem, 1.5cqi, 1.3rem)                   ║
-  ╚══════════════════════════════════════════════════════════╝
-*/
 .event-date {
-  font-size: clamp(1rem, 1.5cqi, 1.3rem); /* BUG FIX #2: was clamp(1.3rem, 1cqi, 1rem) — inverted! */
+  font-size: clamp(1rem, 1.5cqi, 1.3rem);
   color: #fff;
   padding-left: 2.5rem;
   padding-top: 1.5rem;
@@ -640,29 +645,21 @@
 }
 
 .event-time {
-  font-size: clamp(1.3rem, 2cqi, 1.6rem); /* adjusted multiplier */
+  font-size: clamp(1.3rem, 2cqi, 1.6rem);
   line-height: 4rem;
   font-weight: bold;
   color: #fff;
   font-family: var(--font-mono);
 }
 
-/*
-  ╔══════════════════════════════════════════════════════════╗
-  ║  BUG FIX #3 — 'overflow: break-word' is INVALID CSS     ║
-  ║  overflow only accepts: hidden/scroll/auto/visible/clip  ║
-  ║  This was silently ignored → long text could overflow.   ║
-  ║  Fixed with overflow-wrap + word-break.                  ║
-  ╚══════════════════════════════════════════════════════════╝
-*/
 .event-text {
-  font-size: clamp(1.2rem, 1.8cqi, 1.4rem); /* adjusted multiplier */
+  font-size: clamp(1.2rem, 1.8cqi, 1.4rem);
   line-height: 2rem;
   color: #fff;
   flex: 1;
-  min-width: 0; /* IMPROVEMENT: allow shrinking in flex context */
+  min-width: 0;
   padding: 0 3rem 0 1rem;
-  overflow-wrap: break-word;  /* BUG FIX #3: was 'overflow: break-word' — invalid! */
+  overflow-wrap: break-word;
   word-break: break-word;
   font-family: var(--font-body);
 }
@@ -725,7 +722,7 @@
   z-index: 3000;
   border: 1px solid #2c3542;
   animation: slideUp 0.3s ease-out;
-  max-width: 90vw; /* IMPROVEMENT: prevent toast from overflowing on small screens */
+  max-width: 90vw;
   width: max-content;
 }
 
@@ -759,23 +756,15 @@
   align-items: center;
   z-index: 2000;
   backdrop-filter: blur(5px);
-  padding: 1.5rem; /* IMPROVEMENT: ensure modal has room to breathe on any screen */
+  padding: 1.5rem;
 }
 
-/*
-  ╔══════════════════════════════════════════════════════════╗
-  ║  BUG FIX #5 — settings-modal overflow on mobile         ║
-  ║  clamp(30rem, 40vw, 50rem): 30rem = 480px.              ║
-  ║  On a 375px phone 480px > viewport = OVERFLOW.          ║
-  ║  Fixed with min(30rem, 90vw) as the lower bound.        ║
-  ╚══════════════════════════════════════════════════════════╝
-*/
 .settings-modal {
   background: #1e242d;
   padding: 3rem;
   border-radius: 2rem;
   border: 1px solid #2c3542;
-  width: clamp(min(30rem, 90vw), 40vw, 50rem); /* BUG FIX #5: was clamp(30rem, 40vw, 50rem) */
+  width: clamp(min(30rem, 90vw), 40vw, 50rem);
   display: flex;
   flex-direction: column;
   gap: 2rem;
@@ -833,19 +822,25 @@
 }
 
 /* ================================================================
-   IMPROVEMENT: Intermediate breakpoint (1100px)
-   Reduce column-gap before the full vertical stacking kicks in.
-   Without this, the gap was a massive 5rem at ~900px width.
+   Intermediate breakpoint (1100px)
    ================================================================ */
 @media (max-width: 1100px) {
   .calender-app {
     column-gap: 3rem;
     padding: 2.5rem;
   }
+
+  /*
+    FIX for 1100px range: reduce font size ceiling further so that
+    long names still don't clip at this narrower-but-still-desktop width.
+  */
+  .nevigate-date h2 {
+    font-size: clamp(1.1rem, 1.8cqi, 1.8rem);
+  }
 }
 
 /* ================================================================
-   TABLET + MOBILE (≤850px) — Stack layout vertically
+   TABLET + MOBILE (≤850px)
    ================================================================ */
 @media (max-width: 850px) {
   .calender-app {
@@ -855,14 +850,9 @@
     min-width: auto;
     padding: 2rem;
     border-radius: 2rem;
-    border-width: 0.4rem; /* BUG FIX #4: was 1rem (16px!) on mobile — huge waste of space */
+    border-width: 0.4rem;
   }
 
-  /*
-    IMPROVEMENT: hide the ::after drop-shadow on mobile.
-    bottom: -12rem means it extends way below the card, causing
-    unnecessary vertical scroll on mobile browsers.
-  */
   .calender-app::after {
     display: none;
   }
@@ -881,14 +871,15 @@
     margin: 1rem 0;
   }
 
+  /* On mobile, vw is more reliable than cqi for the date header */
   .nevigate-date h2 {
     font-size: clamp(1.2rem, 3.5vw, 2rem);
     padding: 0.8rem;
-    max-width: calc(100% - 9rem);
-    /* allow wrapping on day-view so "Wednesday, April 22, 2026" doesn't overflow */
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    /* Back to mono on mobile since we have full width and the single column
+       layout means no sidebar competing for space */
+    font-family: var(--font-body);
+    letter-spacing: 0.01rem;
+    /* Still no max-width — flex: 1 1 auto handles containment */
   }
 
   .weekdays {
@@ -900,7 +891,7 @@
   }
 
   .days span {
-    height: 3.5rem; /* IMPROVEMENT: reduce cell height on tablet so grid feels proportionate */
+    height: 3.5rem;
     margin-bottom: 0.6rem;
     font-size: clamp(0.9rem, 2.5vw, 1.3rem);
   }
@@ -954,7 +945,6 @@
     font-size: clamp(1rem, 2.5vw, 1.4rem);
   }
 
-  /* IMPROVEMENT: form rows should stack on mobile; two columns in a narrow popup = cramped */
   .form-row {
     flex-direction: column;
     gap: 1rem;
@@ -965,7 +955,6 @@
     width: 100%;
   }
 
-  /* BUG FIX #5 (mobile override): settings-modal width */
   .settings-modal {
     width: 90vw;
     padding: 2rem;
@@ -1001,7 +990,6 @@
   .nevigate-date h2 {
     font-size: clamp(1.1rem, 3.5vw, 1.8rem);
     padding: 0.6rem;
-    max-width: calc(100% - 8.5rem);
   }
 
   .goto-today-btn {
@@ -1041,7 +1029,6 @@
     width: 100%;
   }
 
-  /* IMPROVEMENT: reduce left padding on event date/time so text has more room */
   .event-date {
     padding-left: 1rem;
     padding-top: 1rem;
@@ -1100,7 +1087,6 @@
     letter-spacing: 0;
   }
 
-  /* IMPROVEMENT: icon-only view-switcher at 350px — text + icon together is too wide */
   .view-switcher {
     gap: 0.3rem;
   }
@@ -1108,17 +1094,16 @@
   .view-switcher button {
     padding: 0.7rem;
     gap: 0;
-    font-size: 0; /* hide text */
+    font-size: 0;
   }
 
   .view-switcher button i {
-    font-size: 1.6rem; /* restore icon */
+    font-size: 1.6rem;
   }
 
   .nevigate-date h2 {
     font-size: 1rem;
     padding: 0.4rem;
-    max-width: calc(100% - 7.5rem);
   }
 
   .buttons i {
@@ -1186,14 +1171,6 @@
   to   { opacity: 1; }
 }
 
-/*
-  ╔══════════════════════════════════════════════════════════╗
-  ║  BUG FIX #6 — credit-modal-box fixed width overflow     ║
-  ║  width: 500px with no mobile handling. On a 375px phone ║
-  ║  this straight-up overflows the screen.                 ║
-  ║  Fixed: max-width: 100% + padding: 0 on the box.        ║
-  ╚══════════════════════════════════════════════════════════╝
-*/
 .credit-modal-box {
   position: relative;
   z-index: 1;
@@ -1203,7 +1180,7 @@
   border-radius: 2rem;
   text-align: center;
   color: #fff;
-  width: min(500px, 100%); /* BUG FIX #6: was a hard 500px — overflows on phones */
+  width: min(500px, 100%);
   box-shadow: 0 20px 50px rgba(0,0,0,0.5);
   border: 5px solid transparent;
   overflow: hidden;
@@ -1289,7 +1266,6 @@
   font-size: 2.5rem;
   cursor: pointer;
   transition: color 0.3s;
-  /* IMPROVEMENT: larger tap target on mobile */
   padding: 0.5rem;
 }
 
@@ -1297,12 +1273,11 @@
   color: #fff;
 }
 
-/* IMPROVEMENT: credit modal mobile adjustments */
 @media (max-width: 600px) {
   .credit-modal-overlay {
     padding: 1.5rem;
-    justify-content: center; /* center horizontally on mobile */
-    align-items: flex-end;   /* keep it pinned to bottom like on desktop */
+    justify-content: center;
+    align-items: flex-end;
   }
 
   .credit-modal-box {
