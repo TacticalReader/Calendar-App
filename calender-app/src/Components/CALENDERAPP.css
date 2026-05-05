@@ -1,28 +1,89 @@
 @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@400;700&family=Urbanist:wght@400;500;600;700&display=swap');
 
+/* ================================================================
+   DESIGN TOKENS
+   ================================================================ */
 :root {
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
   --font-heading: "Bebas Neue", sans-serif;
   --font-mono: "JetBrains Mono", monospace;
   --font-body: "Urbanist", sans-serif;
+
+  /* Colour palette */
+  --color-bg:           #1e242d;
+  --color-bg-deep:      #0f1319;
+  --color-bg-elevated:  #161b22;
+  --color-surface:      #2c3542;
+  --color-border:       #2c3542;
+  --color-border-deep:  #0f1319;
+
+  --color-accent:       #ef9011;
+  --color-accent-dark:  #d67e0a;
+  --color-blue:         #00a3ff;
+  --color-blue-dim:     rgba(0, 163, 255, 0.2);
+  --color-accent-dim:   rgba(239, 144, 17, 0.3);
+
+  --color-text:         #fff;
+  --color-text-muted:   #bbb;
+  --color-text-dim:     #78879e;
+  --color-text-ghost:   #3a4556;
+  --color-text-inactive:#566275;
+
+  /* Spacing scale */
+  --space-xs:   0.4rem;
+  --space-sm:   0.8rem;
+  --space-md:   1.5rem;
+  --space-lg:   2.5rem;
+  --space-xl:   3rem;
+  --space-2xl:  4rem;
+
+  /* Radius scale */
+  --radius-sm:  0.8rem;
+  --radius-md:  1rem;
+  --radius-lg:  1.5rem;
+  --radius-xl:  2rem;
+  --radius-2xl: 3rem;
+  --radius-full: 50%;
+
+  /* Touch target minimum */
+  --touch-min: 44px;
+
+  /* Shadow */
+  --shadow-popup: 0 2rem 5rem rgba(0,0,0,0.5);
+  --shadow-glow-accent: 0 0 1.5rem 0.5rem var(--color-accent-dim);
+  --shadow-glow-blue:   0 0 1.5rem 1rem var(--color-blue-dim);
 }
 
-* {
+/* ================================================================
+   GLOBAL RESET
+   ================================================================ */
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
+/* ================================================================
+   ROOT LAYOUT — Calendar App Card
+   ================================================================ */
 .calender-app {
-  width: 60%;
-  min-width: 90vmin;
-  max-width: 100%;
-  min-height: 55rem;
+  /* Fluid width: 55% on wide screens, 100% on narrow */
+  width: clamp(32rem, 85vw, 110rem);
+  min-height: clamp(40rem, 70vh, 70rem);
   height: auto;
-  background: #1e242d;
-  padding: 3rem;
-  border-radius: 3rem;
-  border: 1rem solid #0f1319;
-  display: flex;
-  column-gap: 5rem;
+
+  background: var(--color-bg);
+  padding: var(--space-xl);
+  border-radius: var(--radius-2xl);
+  border: 1rem solid var(--color-border-deep);
+
+  /* CSS Grid gives precise control over the two-panel layout */
+  display: grid;
+  grid-template-columns: 2fr 3fr;
+  column-gap: clamp(2rem, 4vw, 5rem);
+
   position: relative;
   transform-style: preserve-3d;
   transition: height 0.4s var(--ease-out-expo);
@@ -30,204 +91,212 @@
   container-type: inline-size;
 }
 
+/* Bottom shadow */
 .calender-app::after {
   content: "";
   position: absolute;
-  bottom: -12rem;
+  bottom: -10rem;
   left: 50%;
   transform: translateX(-50%) rotateX(50deg);
-  width: 90%;
-  height: 16rem;
-  background: rgba(0,0,0,0.5);
+  width: 80%;
+  height: 14rem;
+  background: rgba(0,0,0,0.45);
   border-radius: 20rem;
   filter: blur(4rem);
+  pointer-events: none;
 }
 
+/* ================================================================
+   CALENDAR PANEL (left / top)
+   ================================================================ */
 .calender {
-  width: 40%;
-  min-width: 0;
+  width: 100%;
+  min-width: 0;  /* prevent grid blowout */
 }
 
+/* ---- Header row ---- */
 .calender-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
 }
 
 .heading {
   font-family: var(--font-heading);
-  font-size: clamp(2rem, 4vw, 4.5rem);
-  color: #fff;
-  letter-spacing: 0.3rem;
-  padding: 1.3rem;
+  font-size: clamp(1.8rem, 3.5cqi, 4rem);
+  color: var(--color-text);
+  letter-spacing: 0.25rem;
+  padding: 1rem 1.2rem;
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.8rem;
+  line-height: 1;
 }
 
 .heading i {
-  color: #ef9011;
+  color: var(--color-accent);
 }
 
+/* Settings icon — ensure 44px touch target */
+.settings-btn {
+  background: transparent;
+  border: none;
+  color: var(--color-text-dim);
+  font-size: 2rem;
+  cursor: pointer;
+  transition: color 0.25s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+}
+
+.settings-btn:hover { color: var(--color-text); }
+
+/* ---- View Switcher ---- */
 .view-switcher {
   display: flex;
-  gap: 0.5rem;
-  background-color: #2c3542;
-  padding: 0.5rem;
-  border-radius: 1rem;
+  gap: 0.4rem;
+  background-color: var(--color-surface);
+  padding: 0.45rem;
+  border-radius: var(--radius-md);
   flex-shrink: 0;
+  /* Allow wrap if headers get tight */
+  flex-wrap: nowrap;
 }
 
 .view-switcher button {
   background: transparent;
   border: none;
-  color: #bbb;
-  padding: 0.8rem 1.2rem;
-  border-radius: 0.8rem;
+  color: var(--color-text-muted);
+  padding: 0.7rem 1rem;
+  border-radius: 0.7rem;
   cursor: pointer;
-  font-size: clamp(1rem, 1.5cqi, 1.4rem);
-  transition: all 0.3s ease;
+  font-size: clamp(1rem, 1.4cqi, 1.35rem);
+  transition: background 0.25s ease, color 0.25s ease;
   display: flex;
   align-items: center;
-  gap: 0.8rem;
+  gap: 0.6rem;
   font-family: var(--font-body);
   font-weight: 600;
   white-space: nowrap;
+  min-height: var(--touch-min);
 }
 
-.view-switcher button i {
-  font-size: 1.2em;
-}
+.view-switcher button i { font-size: 1.2em; }
 
 .view-switcher button.active {
-  background-color: #ef9011;
-  color: #fff;
+  background-color: var(--color-accent);
+  color: var(--color-text);
 }
 
-/*
-  FIX — .nevigate-date redesigned to handle long month names on desktop.
-
-  ROOT CAUSE: The h2 used font-mono (wide per-character) + letter-spacing
-  + clamp up to 2.5rem. Long names like "November, 2026" (13 chars in mono)
-  hit the max-width cap → ellipsis clipping. The "Today" button made it worse
-  by stealing additional space from an already constrained flex row.
-
-  SOLUTION:
-  1. Switch the layout to flex-wrap so the date row can break into two lines
-     when the Today button is present — instead of compressing the h2.
-  2. Remove max-width from h2 entirely; let flex-wrap do the job.
-  3. Reduce the clamp ceiling from 2.5rem to 2rem so long names never overflow
-     even at the widest cqi.
-  4. Keep white-space: nowrap on h2 so the month name itself never wraps
-     mid-word, but allow the outer flex row to wrap.
-  5. Use font-family: var(--font-body) for the date header — Urbanist is
-     proportional and naturally narrower than JetBrains Mono, giving long
-     names the breathing room they need on desktop.
-*/
+/* ---- Navigate Date Row ---- */
 .nevigate-date {
   display: flex;
   align-items: center;
-  column-gap: 1rem;
-  row-gap: 0.5rem;
-  margin: 3.5rem 0;
+  gap: 0.8rem;
+  margin: 2.5rem 0;
   flex-wrap: wrap;
+  row-gap: 0.6rem;
 }
 
 .nevigate-date h2 {
-  color: #bbb;
-  /* Reduced ceiling from 2.5rem → 2rem so "November, 2026" stays within bounds */
-  font-size: clamp(1.2rem, 2cqi, 2rem);
-  padding: 1.3rem;
-  /* Switched to body font — proportional fonts are naturally narrower than mono,
-     giving long names like "November" / "September" the horizontal room they need */
+  color: var(--color-text-muted);
+  font-size: clamp(1.1rem, 1.9cqi, 2rem);
+  padding: 0.8rem 1rem;
   font-family: var(--font-body);
   font-weight: 600;
   letter-spacing: 0.02rem;
   white-space: nowrap;
-  /* Remove max-width cap — flex-wrap on the parent handles overflow instead */
   overflow: visible;
   text-overflow: unset;
-  flex: 1 1 auto; /* grow to fill, shrink if needed, but never clip */
+  flex: 1 1 auto;
   min-width: 0;
 }
 
-/* Back to Today Button */
+/* Back to Today */
 .goto-today-btn {
-  background: linear-gradient(135deg, #ef9011, #d67e0a);
-  color: white;
+  background: linear-gradient(135deg, var(--color-accent), var(--color-accent-dark));
+  color: var(--color-text);
   border: none;
-  padding: 0.5rem 1.5rem;
+  padding: 0.55rem 1.4rem;
   border-radius: 2rem;
   cursor: pointer;
   font-family: var(--font-heading);
-  font-size: 1.4rem;
+  font-size: 1.35rem;
   letter-spacing: 0.1rem;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  box-shadow: 0 4px 10px rgba(239, 144, 17, 0.3);
-  transition: all 0.3s ease;
-  animation: fadeIn 0.3s ease-in-out;
+  box-shadow: 0 4px 10px var(--color-accent-dim);
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+  animation: fadeIn 0.3s ease;
   white-space: nowrap;
-  flex-shrink: 0; /* Never shrink the Today button */
+  flex-shrink: 0;
+  min-height: var(--touch-min);
 }
 
 .goto-today-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 15px rgba(239, 144, 17, 0.4);
+  box-shadow: 0 6px 15px rgba(239,144,17,0.4);
 }
 
-@keyframes fadeIn {
-  from { opacity: 0; transform: translateY(5px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
+/* Prev / Next arrow buttons */
 .buttons {
   display: flex;
-  column-gap: 1rem;
+  gap: 0.8rem;
   margin-left: auto;
-  flex-shrink: 0; /* Never shrink nav arrows */
+  flex-shrink: 0;
 }
 
 .buttons i {
-  width: 3.5rem;
-  height: 3.5rem;
-  background-color: #2c3542;
-  border-radius: 50%;
+  width: var(--touch-min);
+  height: var(--touch-min);
+  background-color: var(--color-surface);
+  border-radius: var(--radius-full);
   display: flex;
   justify-content: center;
   align-items: center;
   font-size: 2rem;
   color: rgb(229, 101, 15);
   cursor: pointer;
-  transition: background 0.3s;
+  transition: background 0.25s ease, color 0.25s ease;
 }
 
 .buttons i:hover {
-  background-color: #ef9011;
-  color: #fff;
+  background-color: var(--color-accent);
+  color: var(--color-text);
 }
 
+/* ---- Weekday Labels ---- */
 .weekdays {
   width: 100%;
   display: flex;
-  margin: 3rem 0;
+  margin: 2rem 0 1rem;
 }
 
 .weekdays span {
   width: calc(100% / 7);
-  font-size: clamp(0.9rem, 1.2cqi, 1.3rem);
+  font-size: clamp(0.85rem, 1.1cqi, 1.25rem);
   font-weight: bold;
   text-transform: uppercase;
-  color: #78879e;
-  letter-spacing: 0.1rem;
+  color: var(--color-text-dim);
+  letter-spacing: 0.06rem;
   display: flex;
   justify-content: center;
   font-family: var(--font-mono);
+  user-select: none;
 }
 
-/* Wrapper for smooth height animation */
+/* ================================================================
+   CALENDAR GRID — Swipe Animation Layer
+   ================================================================ */
 .calendar-grid-wrapper {
   width: 100%;
   position: relative;
@@ -235,12 +304,11 @@
   transition: height 0.4s var(--ease-out-expo);
 }
 
-/* Swipe Track */
 .calendar-track {
   display: flex;
   width: 300%;
   height: 100%;
-  touch-action: none;
+  touch-action: pan-y; /* allow vertical scroll, intercept only horizontal */
 }
 
 .days-grid-slide {
@@ -248,18 +316,18 @@
   flex-shrink: 0;
 }
 
-/* Edge Shadowing Overlay */
+/* Edge fade overlay */
 .swipe-overlay {
   position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
+  inset: 0;
   pointer-events: none;
   z-index: 5;
-  box-shadow: inset 20px 0 20px -10px rgba(0,0,0,0.3), inset -20px 0 20px -10px rgba(0,0,0,0.3);
+  box-shadow:
+    inset 16px 0 16px -8px rgba(0,0,0,0.25),
+    inset -16px 0 16px -8px rgba(0,0,0,0.25);
 }
 
+/* ---- Day Cells ---- */
 .days {
   display: flex;
   flex-wrap: wrap;
@@ -268,47 +336,44 @@
 
 .days span {
   width: calc(100% / 7);
-  height: 4rem;
+  height: clamp(3rem, 4.5cqi, 4.2rem);
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 1rem;
-  font-size: clamp(1rem, 1.5cqi, 1.6rem);
+  margin-bottom: 0.8rem;
+  font-size: clamp(0.95rem, 1.4cqi, 1.55rem);
   color: #ddd;
   cursor: pointer;
-  transition: all 0.2s ease;
-  text-shadow: 0 .5rem 1rem rgba(0,0,0,0.2);
+  transition: transform 0.15s ease, background 0.15s ease;
+  text-shadow: 0 0.4rem 0.8rem rgba(0,0,0,0.2);
   position: relative;
   backface-visibility: hidden;
   font-family: var(--font-mono);
+  border-radius: var(--radius-full);
+  /* Ensure cells are at least touch-friendly */
+  min-height: 3rem;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
-.days span:hover {
-  transform: scale(1.02);
-  z-index: 2;
-}
-
-.days span.inactive {
-  color: #3a4556;
-  cursor: default;
-}
+.days span:hover { transform: scale(1.06); z-index: 2; }
+.days span.inactive { color: var(--color-text-ghost); cursor: default; }
 
 .days span.has-event::after {
   content: '';
   position: absolute;
-  bottom: 0.5rem;
+  bottom: 0.35rem;
   left: 50%;
   transform: translateX(-50%);
-  width: 0.6rem;
-  height: 0.6rem;
-  background-color: #00a3ff;
+  width: 0.55rem;
+  height: 0.55rem;
+  background-color: var(--color-blue);
   border-radius: 50%;
 }
 
 .days span:not(.inactive):not(.has-event):hover {
-  background-color: rgba(239, 144, 17, 0.1);
-  border-radius: 50%;
-  color: #ef9011;
+  background-color: rgba(239, 144, 17, 0.12);
+  color: var(--color-accent);
 }
 
 .days span:not(.inactive):not(.has-event):hover::before {
@@ -317,125 +382,246 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: 2rem;
-  color: rgba(239, 144, 17, 0.5);
+  font-size: 1.8rem;
+  color: rgba(239,144,17,0.4);
   pointer-events: none;
 }
 
 .current-day {
-  background-color: #ef9011;
-  border-radius: 50%;
-  box-shadow: 0 0 1.5rem 0.5rem rgba(239, 144, 17, 0.4);
-  color: #fff !important;
+  background-color: var(--color-accent);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-glow-accent);
+  color: var(--color-text) !important;
   font-weight: 700;
 }
 
+/* ================================================================
+   EVENTS PANEL (right / bottom)
+   ================================================================ */
 .events {
-  width: 60%;
+  width: 100%;
+  min-width: 0;
   height: 100%;
-  padding: 3rem 0;
+  /* Scroll within the panel itself on desktop */
+  max-height: clamp(40rem, 75vh, 80rem);
   overflow-y: auto;
+  overflow-x: hidden;
   display: flex;
   flex-direction: column;
-  min-width: 0;
+  padding: var(--space-xl) 0.5rem var(--space-xl) 0;
+  scroll-behavior: smooth;
 }
 
-/* Empty State */
+/* Thin, styled scrollbar for events panel */
+.events::-webkit-scrollbar { width: 0.4rem; }
+.events::-webkit-scrollbar-track { background: transparent; }
+.events::-webkit-scrollbar-thumb {
+  background: var(--color-surface);
+  border-radius: 1rem;
+}
+.events::-webkit-scrollbar-thumb:hover { background: var(--color-text-dim); }
+
+/* ---- Empty State ---- */
 .empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   height: 100%;
-  color: #78879e;
-  gap: 2rem;
+  min-height: 20rem;
+  color: var(--color-text-dim);
+  gap: var(--space-md);
   animation: fadeIn 0.5s ease;
 }
 
 .empty-state i {
-  font-size: 8rem;
-  background: -webkit-linear-gradient(#2c3542, #1e242d);
+  font-size: 7rem;
+  background: -webkit-linear-gradient(var(--color-surface), var(--color-bg));
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3));
 }
 
 .empty-state p {
-  font-size: 1.8rem;
+  font-size: 1.7rem;
   font-family: var(--font-body);
-  letter-spacing: 0.1rem;
-  color: #566275;
+  letter-spacing: 0.08rem;
+  color: var(--color-text-inactive);
 }
 
-.event-popup {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: #161b22;
-  width: clamp(30rem, 90vw, 50rem);
+/* ---- Event Cards ---- */
+.event {
+  width: 100%;
   height: auto;
-  max-height: 90vh;
-  overflow-y: auto;
-  padding: 3rem;
-  border-radius: 1.5rem;
-  box-shadow: 0 2rem 5rem rgba(0,0,0,0.5);
+  min-height: 6.5rem;
+  background-color: var(--color-blue);
+  padding: 1.2rem 0;
+  border-radius: var(--radius-md);
+  display: flex;
+  align-items: stretch;
+  margin-bottom: 1.8rem;
+  position: relative;
+  flex-shrink: 0;
+  /* Subtle entrance animation */
+  animation: fadeIn 0.3s ease;
+}
+
+.event-date-wrapper {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 2rem;
-  z-index: 2000;
-  animation: popupScale 0.4s var(--ease-out-expo) forwards;
-  border: 1px solid #2c3542;
+  justify-content: center;
+  /* min-width instead of %-width for more flexibility */
+  min-width: 8rem;
+  width: 30%;
+  flex-shrink: 0;
+  border-right: 1px solid rgba(255,255,255,0.35);
+  padding: 0.5rem 1rem;
+  gap: 0.3rem;
 }
 
-.event-popup::-webkit-scrollbar {
-  width: 0.5rem;
+.event-date {
+  font-size: clamp(0.85rem, 1.3cqi, 1.2rem);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  letter-spacing: -0.03rem;
+  text-align: center;
+  line-height: 1.4;
 }
+
+.event-time {
+  font-size: clamp(1.1rem, 1.8cqi, 1.6rem);
+  line-height: 1.3;
+  font-weight: bold;
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  text-align: center;
+}
+
+.event-text {
+  font-size: clamp(1.1rem, 1.6cqi, 1.4rem);
+  line-height: 1.5;
+  color: var(--color-text);
+  flex: 1;
+  min-width: 0;
+  padding: 0.4rem 2.8rem 0.4rem 1.2rem;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  font-family: var(--font-body);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.event-buttons {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  right: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  row-gap: 0.8rem;
+}
+
+.event-buttons i {
+  font-size: 1.6rem;
+  color: var(--color-text);
+  cursor: pointer;
+  /* Touch-friendly */
+  min-width: 2.8rem;
+  min-height: 2.8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0.9;
+  transition: opacity 0.2s;
+}
+
+.event-buttons i:hover { opacity: 1; transform: scale(1.1); }
+
+/* ================================================================
+   EVENT POPUP — Modal with Backdrop
+   ================================================================ */
+.event-popup-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.6);
+  backdrop-filter: blur(4px);
+  z-index: 1999;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 1.5rem;
+  /* Account for notched phones / virtual keyboard */
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
+  animation: fadeIn 0.2s ease;
+}
+
+.event-popup {
+  background-color: var(--color-bg-elevated);
+  width: clamp(30rem, min(92vw, 50rem), 50rem);
+  height: auto;
+  /* Use dvh for reliable viewport height on mobile (accounts for browser chrome) */
+  max-height: min(90dvh, 90vh);
+  overflow-y: auto;
+  padding: var(--space-xl);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-popup);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1.6rem;
+  z-index: 2000;
+  border: 1px solid var(--color-border);
+  animation: popupScale 0.35s var(--ease-out-expo) forwards;
+  position: relative;
+  /* Standalone (no backdrop wrapper) fallback */
+  margin: auto;
+}
+
+.event-popup::-webkit-scrollbar { width: 0.4rem; }
 .event-popup::-webkit-scrollbar-thumb {
-  background-color: #2c3542;
+  background: var(--color-border);
   border-radius: 1rem;
 }
 
-@keyframes popupScale {
-  from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
-  to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-}
-
+/* ---- Time Picker ---- */
 .time-input {
   display: flex;
-  gap: 0.5rem;
+  gap: 0.6rem;
   align-items: center;
-  margin-bottom: 1rem;
   flex-wrap: wrap;
   justify-content: center;
+  width: 100%;
 }
 
 .event-popup-time {
-  width: clamp(4rem, 5cqi, 7rem);
-  background-color: #00a3ff;
+  width: clamp(4rem, 6cqi, 7rem);
+  background-color: var(--color-blue);
   font-family: var(--font-mono);
-  font-size: clamp(1.5rem, 2cqi, 2.2rem);
+  font-size: clamp(1.4rem, 2.2cqi, 2.2rem);
   display: flex;
   justify-content: center;
-  box-shadow: 0 0 1.5rem 1rem rgba(0, 163, 255, 0.2);
-  color: #fff;
-  letter-spacing: 0.1rem;
+  box-shadow: var(--shadow-glow-blue);
+  color: var(--color-text);
+  letter-spacing: 0.08rem;
   align-items: center;
   border-radius: 0.5rem;
-  padding: 0.5rem;
+  padding: 0.6rem;
+  min-height: var(--touch-min);
 }
 
-.time-input input, .time-input select {
+.time-input input,
+.time-input select {
   background-color: transparent;
   border: none;
-  border-top: 0.2rem solid #00a3ff;
-  border-bottom: 0.2rem solid #00a3ff;
-  color: #fff;
+  border-top: 2px solid var(--color-blue);
+  border-bottom: 2px solid var(--color-blue);
+  color: var(--color-text);
   width: clamp(4rem, 6cqi, 6rem);
-  height: 4rem;
+  height: var(--touch-min);
   text-align: center;
-  font-size: clamp(1.5rem, 2cqi, 1.6rem);
+  font-size: clamp(1.4rem, 2cqi, 1.6rem);
   font-family: var(--font-mono);
 }
 
@@ -447,72 +633,47 @@
 }
 
 .time-input select option {
-  background-color: #161b22;
-  color: #fff;
+  background-color: var(--color-bg-elevated);
+  color: var(--color-text);
 }
 
 .time-input span {
-  color: #fff;
+  color: var(--color-text);
   font-size: 2rem;
 }
 
-.event {
-  width: 100%;
-  height: auto;
-  min-height: 7rem;
-  background-color: #00a3ff;
-  padding: 1.5rem 0;
-  border-radius: 1rem;
-  display: flex;
-  align-items: center;
-  margin-bottom: 2rem;
-  position: relative;
-}
-
-.event-date-wrapper {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 25%;
-  flex-shrink: 0;
-  border-right: 0.1rem solid rgba(255,255,255,0.5);
-  border-radius: 5px;
-  padding-right: 1rem;
-}
-
+/* ---- Event Textarea ---- */
 .event-popup textarea {
   width: 100%;
   aspect-ratio: 5 / 2;
   resize: none;
-  background-color: #0f1319;
-  border: 1px solid #2c3542;
+  background-color: var(--color-bg-deep);
+  border: 1px solid var(--color-border);
   padding: 1rem;
-  border-radius: 0.8rem;
-  color: #fff;
-  transition: all 0.3s ease;
+  border-radius: var(--radius-sm);
+  color: var(--color-text);
+  transition: border 0.25s ease, box-shadow 0.25s ease;
   font-family: var(--font-body);
-  font-size: 1.3rem;
+  font-size: clamp(1.2rem, 1.5cqi, 1.4rem);
 }
 
 .event-popup textarea:focus {
   outline: none;
-  border-color: #00a3ff;
-  box-shadow: 0 0 0 2px rgba(0, 163, 255, 0.1);
+  border-color: var(--color-blue);
+  box-shadow: 0 0 0 3px var(--color-blue-dim);
 }
 
 .event-popup textarea::placeholder {
-  font-size: clamp(1rem, 1.2cqi, 1.3rem);
-  color: #78879e;
+  color: var(--color-text-dim);
 }
 
-.event-popup textarea:focus::placeholder {
-  color: transparent;
-}
+.event-popup textarea:focus::placeholder { color: transparent; }
 
+/* ---- Form Fields ---- */
 .form-row {
   width: 100%;
   display: flex;
-  gap: 1.5rem;
+  gap: 1.2rem;
   justify-content: space-between;
   flex-wrap: wrap;
 }
@@ -520,429 +681,538 @@
 .form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.8rem;
+  gap: 0.7rem;
   flex: 1;
-  min-width: 12rem;
+  min-width: 11rem;
 }
 
 .form-group label {
-  color: #78879e;
-  font-size: 1.2rem;
+  color: var(--color-text-dim);
+  font-size: 1.15rem;
   font-family: var(--font-body);
   font-weight: 600;
-  letter-spacing: 0.05rem;
+  letter-spacing: 0.04rem;
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.5rem;
   white-space: nowrap;
 }
 
 .form-group label i {
-  color: #00a3ff;
-  font-size: 1.4rem;
+  color: var(--color-blue);
+  font-size: 1.35rem;
 }
 
-.form-select, .form-input {
+.form-select,
+.form-input {
   width: 100%;
-  background-color: #0f1319;
-  border: 1px solid #2c3542;
-  color: #fff;
-  padding: 1rem 1.2rem;
-  border-radius: 0.8rem;
-  font-size: 1.3rem;
+  background-color: var(--color-bg-deep);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  padding: 0.9rem 1.1rem;
+  border-radius: var(--radius-sm);
+  font-size: 1.25rem;
   outline: none;
-  transition: all 0.3s ease;
+  transition: border 0.25s ease, box-shadow 0.25s ease, background 0.25s ease;
   font-family: var(--font-body);
+  min-height: var(--touch-min);
 }
 
 .form-select {
   appearance: none;
   background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2300a3ff' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
   background-repeat: no-repeat;
-  background-position: right 1rem center;
-  background-size: 1.5rem;
-  padding-right: 3rem;
+  background-position: right 0.9rem center;
+  background-size: 1.4rem;
+  padding-right: 2.8rem;
   cursor: pointer;
 }
 
-.form-select:hover, .form-input:hover {
-  border-color: #3a4556;
-}
+.form-select:hover,
+.form-input:hover   { border-color: #3a4556; }
 
-.form-select:focus, .form-input:focus {
-  border-color: #00a3ff;
-  box-shadow: 0 0 0 3px rgba(0, 163, 255, 0.15);
+.form-select:focus,
+.form-input:focus {
+  border-color: var(--color-blue);
+  box-shadow: 0 0 0 3px rgba(0,163,255,0.15);
   background-color: #131820;
 }
 
+/* ---- Submit Button ---- */
 .event-popup-btn {
   width: 100%;
-  height: 4.5rem;
-  background-color: #00a3ff;
+  height: 4.8rem;
+  background-color: var(--color-blue);
   font-family: var(--font-heading);
-  font-size: clamp(1.5rem, 2cqi, 2.2rem);
+  font-size: clamp(1.5rem, 2.2cqi, 2.2rem);
   letter-spacing: 0.1rem;
-  color: #fff;
+  color: var(--color-text);
   border: none;
-  box-shadow: 0 0 1.5rem 1rem rgba(0, 163, 255, 0.2);
+  box-shadow: var(--shadow-glow-blue);
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
-  border-radius: 0.8rem;
-  margin-top: 1rem;
+  gap: 0.8rem;
+  border-radius: var(--radius-sm);
+  transition: opacity 0.2s ease, transform 0.1s ease;
 }
 
 .event-popup-btn.conflict {
-  background-color: #ef9011;
-  box-shadow: 0 0 1.5rem 1rem rgba(239, 144, 17, 0.2);
+  background-color: var(--color-accent);
+  box-shadow: 0 0 1.5rem 1rem var(--color-accent-dim);
 }
 
-.event-popup-btn:active {
-  transform: translateY(0.1rem);
-}
+.event-popup-btn:active { transform: translateY(1px); opacity: 0.92; }
 
+/* ---- Conflict Warning ---- */
 .conflict-warning {
-  color: #ef9011;
-  font-size: 1.4rem;
+  color: var(--color-accent);
+  font-size: 1.35rem;
   font-family: var(--font-body);
-  letter-spacing: 0.1rem;
+  letter-spacing: 0.06rem;
   text-align: center;
   animation: fadeIn 0.3s ease;
   display: flex;
   align-items: center;
   gap: 0.5rem;
-  padding: 0 2rem;
+  padding: 0 1.5rem;
 }
 
+/* ---- Close Button ---- */
 .close-event-popup {
   position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
+  top: 1.2rem;
+  right: 1.2rem;
   border: none;
   background-color: transparent;
   cursor: pointer;
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
 }
 
 .close-event-popup i {
-  font-size: 2.5rem;
-  color: #78879e;
-  transition: color 0.3s;
+  font-size: 2.4rem;
+  color: var(--color-text-dim);
+  transition: color 0.25s;
 }
 
-.close-event-popup i:hover {
-  color: #fff;
-}
+.close-event-popup:hover i { color: var(--color-text); }
 
-.event-date {
-  font-size: clamp(1rem, 1.5cqi, 1.3rem);
-  color: #fff;
-  padding-left: 2.5rem;
-  padding-top: 1.5rem;
-  font-family: var(--font-mono);
-  letter-spacing: -0.05rem;
-}
-
-.event-time {
-  font-size: clamp(1.3rem, 2cqi, 1.6rem);
-  line-height: 4rem;
-  font-weight: bold;
-  color: #fff;
-  font-family: var(--font-mono);
-}
-
-.event-text {
-  font-size: clamp(1.2rem, 1.8cqi, 1.4rem);
-  line-height: 2rem;
-  color: #fff;
-  flex: 1;
-  min-width: 0;
-  padding: 0 3rem 0 1rem;
-  overflow-wrap: break-word;
-  word-break: break-word;
-  font-family: var(--font-body);
-}
-
-.event-buttons {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  right: 1rem;
-  display: flex;
-  flex-direction: column;
-  row-gap: 1rem;
-}
-
-.event-buttons i {
-  font-size: 1.6rem;
-  color: #fff;
-  cursor: pointer;
-}
-
-/* Saved Indicator */
-.saved-indicator {
-  font-size: 1.2rem;
-  color: #78879e;
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  justify-content: center;
-}
-
-/* Settings Button */
-.settings-btn {
-  background: transparent;
-  border: none;
-  color: #78879e;
-  font-size: 2rem;
-  cursor: pointer;
-  transition: color 0.3s;
-  flex-shrink: 0;
-}
-
-.settings-btn:hover {
-  color: #fff;
-}
-
-/* Toast Notification */
+/* ================================================================
+   TOAST NOTIFICATION
+   ================================================================ */
 .toast-notification {
   position: fixed;
-  bottom: 2rem;
+  bottom: max(2rem, env(safe-area-inset-bottom, 2rem));
   left: 50%;
   transform: translateX(-50%);
-  background-color: #161b22;
-  color: #fff;
-  padding: 1.5rem 2.5rem;
-  border-radius: 1rem;
-  box-shadow: 0 1rem 3rem rgba(0,0,0,0.5);
+  background-color: var(--color-bg-elevated);
+  color: var(--color-text);
+  padding: 1.4rem 2.2rem;
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-popup);
   display: flex;
   align-items: center;
-  gap: 2rem;
+  gap: 1.8rem;
   z-index: 3000;
-  border: 1px solid #2c3542;
+  border: 1px solid var(--color-border);
   animation: slideUp 0.3s ease-out;
-  max-width: 90vw;
+  max-width: min(90vw, 40rem);
   width: max-content;
 }
 
 .toast-undo-btn {
   background: transparent;
   border: none;
-  color: #ef9011;
+  color: var(--color-accent);
   font-weight: bold;
-  font-size: 1.4rem;
+  font-size: 1.35rem;
   cursor: pointer;
   text-transform: uppercase;
   letter-spacing: 0.1rem;
   flex-shrink: 0;
+  min-height: var(--touch-min);
+  display: flex;
+  align-items: center;
 }
 
-@keyframes slideUp {
-  from { transform: translate(-50%, 100%); opacity: 0; }
-  to   { transform: translate(-50%, 0); opacity: 1; }
+/* Saved Indicator */
+.saved-indicator {
+  font-size: 1.2rem;
+  color: var(--color-text-dim);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  justify-content: center;
 }
 
-/* Settings Modal */
+/* ================================================================
+   SETTINGS MODAL
+   ================================================================ */
 .settings-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0,0,0,0.8);
+  inset: 0;
+  background: rgba(0,0,0,0.75);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 2000;
   backdrop-filter: blur(5px);
   padding: 1.5rem;
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
 }
 
 .settings-modal {
-  background: #1e242d;
-  padding: 3rem;
-  border-radius: 2rem;
-  border: 1px solid #2c3542;
-  width: clamp(min(30rem, 90vw), 40vw, 50rem);
+  background: var(--color-bg);
+  padding: var(--space-xl);
+  border-radius: var(--radius-xl);
+  border: 1px solid var(--color-border);
+  width: clamp(min(30rem, 90vw), 40vw, 48rem);
+  max-height: min(90dvh, 90vh);
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 2rem;
+  gap: var(--space-md);
 }
 
 .settings-modal h2 {
-  color: #fff;
+  color: var(--color-text);
   font-family: var(--font-heading);
-  font-size: 2.5rem;
+  font-size: 2.4rem;
   letter-spacing: 0.1rem;
 }
 
 .settings-actions {
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.2rem;
 }
 
 .settings-btn-action {
-  background: #2c3542;
-  color: #fff;
+  background: var(--color-surface);
+  color: var(--color-text);
   border: none;
-  padding: 1.5rem;
-  border-radius: 1rem;
-  font-size: 1.4rem;
+  padding: 1.4rem;
+  border-radius: var(--radius-md);
+  font-size: 1.35rem;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
-  transition: background 0.3s;
+  gap: 0.9rem;
+  transition: background 0.25s ease;
   font-family: var(--font-body);
+  min-height: var(--touch-min);
 }
 
-.settings-btn-action:hover {
-  background: #00a3ff;
-}
+.settings-btn-action:hover { background: var(--color-blue); }
 
 .settings-close {
   background: transparent;
-  border: 1px solid #78879e;
-  color: #78879e;
-  padding: 1rem;
-  border-radius: 1rem;
+  border: 1px solid var(--color-text-dim);
+  color: var(--color-text-dim);
+  padding: 0.9rem;
+  border-radius: var(--radius-md);
   cursor: pointer;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
   font-family: var(--font-body);
   font-size: 1.3rem;
-  transition: all 0.3s ease;
+  transition: border-color 0.25s ease, color 0.25s ease;
+  min-height: var(--touch-min);
 }
 
 .settings-close:hover {
-  border-color: #fff;
-  color: #fff;
+  border-color: var(--color-text);
+  color: var(--color-text);
 }
 
 /* ================================================================
-   Intermediate breakpoint (1100px)
+   CREDIT MODAL
    ================================================================ */
-@media (max-width: 1100px) {
+.credit-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.7);
+  backdrop-filter: blur(5px);
+  z-index: 10000;
+  display: flex;
+  justify-content: flex-end;
+  align-items: flex-end;
+  padding: 2.5rem;
+  padding-bottom: max(2.5rem, env(safe-area-inset-bottom));
+  animation: fadeInModal 0.5s ease-out;
+}
+
+.credit-modal-box {
+  position: relative;
+  z-index: 1;
+  background: var(--color-bg);
+  background-clip: padding-box;
+  padding: 3.5rem;
+  border-radius: var(--radius-xl);
+  text-align: center;
+  color: var(--color-text);
+  width: min(480px, 100%);
+  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+  border: 4px solid transparent;
+  overflow: hidden;
+}
+
+.credit-modal-box::before {
+  content: '';
+  position: absolute;
+  inset: -4px;
+  z-index: -1;
+  border-radius: var(--radius-xl);
+  background: linear-gradient(60deg, #f79533, #f37055, #ef4e7b, #a166ab, #5073b8, #1098ad, #07b39b, #6fba82);
+  background-size: 300% 300%;
+  animation: animatedgradient 3s ease alternate infinite;
+}
+
+.credit-icon {
+  font-size: 4.5rem;
+  margin-bottom: 1.8rem;
+  background: linear-gradient(45deg, var(--color-blue), var(--color-accent));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 10px rgba(0,163,255,0.3));
+}
+
+.credit-text {
+  font-family: var(--font-body);
+  font-size: 1.55rem;
+  color: #a0aec0;
+  margin-bottom: 1rem;
+  line-height: 1.5;
+}
+
+.credit-author {
+  font-family: var(--font-heading);
+  font-size: 3.8rem;
+  background: linear-gradient(to right, #fff, #a0aec0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 2rem;
+  letter-spacing: 2px;
+}
+
+.credit-github {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.9rem;
+  background: #0d1117;
+  padding: 0.9rem 1.8rem;
+  border-radius: 50px;
+  text-decoration: none;
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 1.35rem;
+  border: 1px solid #30363d;
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  min-height: var(--touch-min);
+}
+
+.credit-github:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+  border-color: var(--color-accent);
+}
+
+.credit-github i { font-size: 1.8rem; }
+
+.credit-close-btn {
+  position: absolute;
+  top: 1.2rem;
+  right: 1.2rem;
+  background: none;
+  border: none;
+  color: #4a5568;
+  font-size: 2.4rem;
+  cursor: pointer;
+  transition: color 0.25s;
+  padding: 0.4rem;
+  min-width: var(--touch-min);
+  min-height: var(--touch-min);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+}
+
+.credit-close-btn:hover { color: var(--color-text); }
+
+/* ================================================================
+   KEYFRAMES
+   ================================================================ */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(5px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes popupScale {
+  from { opacity: 0; transform: scale(0.88); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideUp {
+  from { transform: translate(-50%, 100%); opacity: 0; }
+  to   { transform: translate(-50%, 0);   opacity: 1; }
+}
+
+@keyframes fadeInModal {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+@keyframes animatedgradient {
+  0%   { background-position: 0% 50%; }
+  50%  { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* ================================================================
+   BREAKPOINT: Large Desktop (≤1400px)
+   ================================================================ */
+@media (max-width: 1400px) {
   .calender-app {
-    column-gap: 3rem;
-    padding: 2.5rem;
+    width: clamp(32rem, 90vw, 110rem);
+  }
+}
+
+/* ================================================================
+   BREAKPOINT: Medium-Large Desktop (≤1200px)
+   ================================================================ */
+@media (max-width: 1200px) {
+  .calender-app {
+    padding: var(--space-lg);
+    column-gap: clamp(1.5rem, 3vw, 3.5rem);
   }
 
-  /*
-    FIX for 1100px range: reduce font size ceiling further so that
-    long names still don't clip at this narrower-but-still-desktop width.
-  */
   .nevigate-date h2 {
-    font-size: clamp(1.1rem, 1.8cqi, 1.8rem);
+    font-size: clamp(1.1rem, 1.8cqi, 1.85rem);
   }
 }
 
 /* ================================================================
-   TABLET + MOBILE (≤850px)
+   BREAKPOINT: Small Desktop (≤1050px)
    ================================================================ */
-@media (max-width: 850px) {
+@media (max-width: 1050px) {
   .calender-app {
-    flex-direction: column;
-    row-gap: 2rem;
-    width: 95%;
-    min-width: auto;
+    /* Slightly more even split as space tightens */
+    grid-template-columns: 1fr 1.6fr;
+    column-gap: 2rem;
     padding: 2rem;
-    border-radius: 2rem;
-    border-width: 0.4rem;
-  }
-
-  .calender-app::after {
-    display: none;
-  }
-
-  .calender {
-    width: 100%;
-    margin: 0;
   }
 
   .heading {
-    font-size: clamp(2rem, 6vw, 3.5rem);
-    padding: 0.8rem;
+    font-size: clamp(1.6rem, 3cqi, 3rem);
+  }
+
+  .nevigate-date h2 {
+    font-size: clamp(1.1rem, 1.7cqi, 1.7rem);
+  }
+
+  .view-switcher button {
+    padding: 0.65rem 0.9rem;
+    font-size: clamp(0.95rem, 1.3cqi, 1.2rem);
+  }
+}
+
+/* ================================================================
+   BREAKPOINT: Tablet Portrait + Large Phone Landscape (≤900px)
+   ================================================================ */
+@media (max-width: 900px) {
+  .calender-app {
+    /* Stack panels vertically */
+    grid-template-columns: 1fr;
+    row-gap: 2rem;
+    width: min(96vw, 68rem);
+    padding: var(--space-lg);
+    border-radius: var(--radius-xl);
+    border-width: 0.5rem;
+    min-height: unset;
+  }
+
+  .calender-app::after { display: none; }
+
+  /* Calendar panel takes full width */
+  .calender { width: 100%; }
+
+  /* Events panel: horizontal scroll for large screens, vertical list on small */
+  .events {
+    width: 100%;
+    max-height: 45vh;
+    padding: var(--space-sm) 0;
+  }
+
+  .heading {
+    font-size: clamp(2rem, 5.5vw, 3.2rem);
+    padding: 0.7rem 0.9rem;
   }
 
   .nevigate-date {
-    margin: 1rem 0;
+    margin: 1.5rem 0;
   }
 
-  /* On mobile, vw is more reliable than cqi for the date header */
   .nevigate-date h2 {
-    font-size: clamp(1.2rem, 3.5vw, 2rem);
-    padding: 0.8rem;
-    /* Back to mono on mobile since we have full width and the single column
-       layout means no sidebar competing for space */
+    font-size: clamp(1.2rem, 3.5vw, 1.9rem);
+    padding: 0.7rem 0.9rem;
     font-family: var(--font-body);
-    letter-spacing: 0.01rem;
-    /* Still no max-width — flex: 1 1 auto handles containment */
   }
 
   .weekdays {
-    margin: 1rem 0;
-  }
-
-  .weekdays span {
-    font-size: clamp(0.8rem, 2.2vw, 1.1rem);
+    margin: 1.2rem 0 0.6rem;
   }
 
   .days span {
-    height: 3.5rem;
+    height: clamp(3rem, 5.5vw, 3.8rem);
     margin-bottom: 0.6rem;
     font-size: clamp(0.9rem, 2.5vw, 1.3rem);
   }
 
+  .event-date-wrapper {
+    min-width: 7rem;
+    width: 28%;
+  }
+
+  .settings-modal {
+    width: min(88vw, 44rem);
+    padding: var(--space-lg);
+  }
+
+  /* View switcher: show icons only to save space */
+  .view-switcher button {
+    font-size: clamp(1rem, 2.5vw, 1.3rem);
+    padding: 0.7rem 1rem;
+  }
+}
+
+/* ================================================================
+   BREAKPOINT: Tablet Portrait (≤768px)
+   ================================================================ */
+@media (max-width: 768px) {
+  .calender-app {
+    width: 97vw;
+    padding: 1.8rem;
+    border-radius: var(--radius-xl);
+    border-width: 0.4rem;
+    row-gap: 1.5rem;
+  }
+
+  /* Two-event horizontal layout for wider phone landscape */
   .events {
-    width: 100%;
-    margin: 0;
-    padding: 1rem 0;
+    max-height: 50vh;
   }
 
   .event-popup {
-    width: min(90vw, 50rem);
-    max-height: 85vh;
-    padding: 2rem;
-    gap: 1.5rem;
-  }
-
-  .event-popup-time {
-    width: clamp(4rem, 8vw, 6rem);
-    font-size: clamp(1.4rem, 4vw, 2.2rem);
-  }
-
-  .time-input input, .time-input select {
-    width: clamp(4rem, 7vw, 6rem);
-    font-size: clamp(1.3rem, 3.5vw, 2rem);
-  }
-
-  .event-popup textarea {
-    width: 100%;
-  }
-
-  .event-popup textarea::placeholder {
-    font-size: clamp(1rem, 2.5vw, 1.5rem);
-  }
-
-  .event-popup-btn {
-    width: 100%;
-    font-size: clamp(1.5rem, 4vw, 2.2rem);
-  }
-
-  .event-date {
-    font-size: clamp(0.9rem, 2vw, 1.2rem);
-  }
-
-  .event-time {
-    font-size: clamp(1rem, 2.5vw, 1.5rem);
-    line-height: 3rem;
-  }
-
-  .event-text {
-    font-size: clamp(1rem, 2.5vw, 1.4rem);
+    width: min(94vw, 50rem);
+    padding: var(--space-lg);
+    gap: 1.4rem;
   }
 
   .form-row {
@@ -955,352 +1225,390 @@
     width: 100%;
   }
 
-  .settings-modal {
-    width: 90vw;
-    padding: 2rem;
+  .event-popup-btn {
+    height: 4.5rem;
+    font-size: clamp(1.4rem, 4vw, 2rem);
   }
 }
 
 /* ================================================================
-   SMALL MOBILE (≤500px)
+   BREAKPOINT: Large Mobile (≤600px)
    ================================================================ */
-@media (max-width: 500px) {
+@media (max-width: 600px) {
   .calender-app {
-    width: 98%;
+    width: 100vw;
+    /* Edge to edge on small phones */
+    border-radius: 1.5rem 1.5rem 0 0;
+    border-width: 0.3rem;
     padding: 1.5rem;
-    border-radius: 1.5rem;
-    border-width: 0.25rem;
-    row-gap: 1.5rem;
+    /* Align to bottom of screen */
+    border-bottom: none;
   }
 
-  .calender {
-    width: 100%;
+  .calender-header {
+    gap: 0.5rem;
   }
 
   .heading {
-    font-size: clamp(1.8rem, 7vw, 2.8rem);
+    font-size: clamp(1.8rem, 6.5vw, 2.6rem);
     letter-spacing: 0.15rem;
-    padding: 0.6rem;
+    padding: 0.5rem 0.7rem;
+  }
+
+  /* On narrow screens, hide text labels in view switcher */
+  .view-switcher button span,
+  .view-switcher button > *:not(i) {
+    /* Keep text but let it shrink */
+    font-size: clamp(0.9rem, 2.5vw, 1.2rem);
   }
 
   .nevigate-date {
-    margin: 0.5rem 0;
+    margin: 1rem 0;
+    row-gap: 0.5rem;
   }
 
   .nevigate-date h2 {
-    font-size: clamp(1.1rem, 3.5vw, 1.8rem);
-    padding: 0.6rem;
+    font-size: clamp(1.1rem, 4vw, 1.6rem);
+    padding: 0.6rem 0.8rem;
   }
 
   .goto-today-btn {
-    font-size: 1.1rem;
-    padding: 0.4rem 1rem;
+    font-size: 1.15rem;
+    padding: 0.5rem 1.1rem;
   }
 
   .buttons i {
-    width: 3rem;
-    height: 3rem;
-    font-size: 1.6rem;
+    width: 3.2rem;
+    height: 3.2rem;
+    font-size: 1.8rem;
   }
 
   .weekdays {
-    margin: 0.5rem 0;
+    margin: 0.8rem 0 0.4rem;
   }
 
   .weekdays span {
-    font-size: clamp(0.7rem, 2vw, 1rem);
-    letter-spacing: 0;
+    font-size: clamp(0.75rem, 2.3vw, 1.05rem);
   }
 
   .days span {
-    height: 3rem;
-    margin-bottom: 0.3rem;
-    font-size: clamp(0.85rem, 2.5vw, 1.2rem);
-  }
-
-  .event-popup {
-    width: min(95vw, 50rem);
-    padding: 1.5rem;
-    max-height: 88vh;
-    gap: 1.2rem;
+    height: clamp(2.8rem, 8vw, 3.6rem);
+    margin-bottom: 0.4rem;
+    font-size: clamp(0.85rem, 2.8vw, 1.2rem);
   }
 
   .events {
-    width: 100%;
+    max-height: 40vh;
+    padding: 0.5rem 0;
+  }
+
+  .event {
+    margin-bottom: 1.2rem;
+    min-height: 5.5rem;
+  }
+
+  .event-date-wrapper {
+    min-width: 6rem;
+    width: 32%;
+    padding: 0.4rem 0.8rem;
   }
 
   .event-date {
-    padding-left: 1rem;
-    padding-top: 1rem;
-    font-size: clamp(0.8rem, 2vw, 1.1rem);
+    font-size: clamp(0.75rem, 2.2vw, 1rem);
   }
 
   .event-time {
-    line-height: 2.5rem;
+    font-size: clamp(0.9rem, 2.5vw, 1.3rem);
   }
 
   .event-text {
-    padding: 0 2.5rem 0 0.8rem;
+    font-size: clamp(0.95rem, 2.5vw, 1.2rem);
+    padding: 0.3rem 2.4rem 0.3rem 0.9rem;
   }
+
+  .event-buttons i { font-size: 1.45rem; }
+
+  .event-popup {
+    width: min(98vw, 50rem);
+    padding: 1.5rem;
+    gap: 1.2rem;
+    max-height: min(88dvh, 92vh);
+    border-radius: var(--radius-lg);
+  }
+
+  .event-popup-time {
+    font-size: clamp(1.3rem, 4vw, 1.8rem);
+    width: clamp(3.5rem, 8vw, 5rem);
+  }
+
+  .time-input input,
+  .time-input select {
+    width: clamp(3.8rem, 7.5vw, 5.5rem);
+    font-size: clamp(1.2rem, 3.8vw, 1.6rem);
+  }
+
+  .event-popup textarea {
+    aspect-ratio: 4 / 2;
+    font-size: clamp(1.1rem, 3vw, 1.3rem);
+  }
+
+  .form-select,
+  .form-input {
+    font-size: 1.2rem;
+    padding: 0.8rem 1rem;
+  }
+
+  .form-group label { font-size: 1.1rem; }
 
   .settings-modal {
-    width: 94vw;
+    width: min(96vw, 44rem);
     padding: 1.5rem;
-    border-radius: 1.5rem;
-    gap: 1.5rem;
+    border-radius: var(--radius-lg);
+    gap: 1.2rem;
   }
 
-  .settings-modal h2 {
-    font-size: 2rem;
-  }
+  .settings-modal h2 { font-size: 2rem; }
 
   .settings-btn-action {
-    padding: 1.2rem;
-    font-size: 1.3rem;
+    padding: 1.1rem;
+    font-size: 1.25rem;
   }
+
+  .credit-modal-overlay {
+    padding: 1.2rem;
+    justify-content: center;
+    align-items: flex-end;
+    padding-bottom: max(1.2rem, env(safe-area-inset-bottom));
+  }
+
+  .credit-modal-box {
+    padding: 2.8rem 1.8rem;
+    border-radius: var(--radius-lg);
+  }
+
+  .credit-icon { font-size: 3.8rem; margin-bottom: 1.4rem; }
+  .credit-text { font-size: 1.35rem; }
+  .credit-author { font-size: 2.8rem; letter-spacing: 1px; }
+  .credit-github { font-size: 1.2rem; padding: 0.8rem 1.4rem; }
 }
 
 /* ================================================================
-   EXTRA SMALL MOBILE (≤350px)
+   BREAKPOINT: Medium Mobile (≤480px)
    ================================================================ */
-@media (max-width: 350px) {
+@media (max-width: 480px) {
+  .calender-app {
+    padding: 1.2rem;
+    border-radius: 1.2rem 1.2rem 0 0;
+    row-gap: 1.2rem;
+  }
+
+  .heading {
+    font-size: clamp(1.7rem, 7.5vw, 2.4rem);
+    padding: 0.4rem 0.6rem;
+    gap: 0.6rem;
+  }
+
+  /* At this width: text labels in view switcher hidden, icons only */
+  .view-switcher {
+    gap: 0.3rem;
+    padding: 0.4rem;
+  }
+
+  .view-switcher button {
+    padding: 0.65rem 0.85rem;
+    gap: 0;
+    /* Text hidden via font-size:0 trick but keeping icon */
+    font-size: 0;
+  }
+
+  .view-switcher button i {
+    font-size: 1.65rem;
+  }
+
+  .nevigate-date h2 {
+    font-size: clamp(1rem, 4vw, 1.5rem);
+    padding: 0.5rem 0.6rem;
+  }
+
+  .goto-today-btn {
+    font-size: 1rem;
+    padding: 0.45rem 0.9rem;
+    gap: 0.4rem;
+  }
+
+  .buttons i {
+    width: 2.9rem;
+    height: 2.9rem;
+    font-size: 1.7rem;
+  }
+
+  .days span {
+    height: clamp(2.5rem, 9vw, 3.2rem);
+    margin-bottom: 0.3rem;
+    font-size: clamp(0.8rem, 3vw, 1.1rem);
+  }
+
+  .weekdays span {
+    font-size: clamp(0.68rem, 2vw, 0.95rem);
+    letter-spacing: 0;
+  }
+
+  .event-date-wrapper {
+    min-width: 5.5rem;
+    width: 33%;
+    padding: 0.3rem 0.6rem;
+  }
+
+  .event-date { font-size: clamp(0.7rem, 2vw, 0.95rem); }
+  .event-time { font-size: clamp(0.85rem, 2.5vw, 1.15rem); }
+  .event-text { font-size: clamp(0.88rem, 2.5vw, 1.1rem); padding-right: 2rem; }
+
+  .event-buttons { right: 0.5rem; }
+  .event-buttons i { font-size: 1.3rem; }
+
+  .event-popup { padding: 1.2rem; gap: 1rem; }
+
+  .settings-modal { padding: 1.2rem; gap: 1rem; border-radius: var(--radius-md); }
+  .settings-modal h2 { font-size: 1.9rem; }
+  .settings-btn-action { padding: 1rem; font-size: 1.2rem; }
+}
+
+/* ================================================================
+   BREAKPOINT: Small Mobile (≤375px)
+   ================================================================ */
+@media (max-width: 375px) {
   .calender-app {
     padding: 1rem;
-    border-radius: 1rem;
+    border-radius: 1rem 1rem 0 0;
     border-width: 0.2rem;
     row-gap: 1rem;
   }
 
   .heading {
-    font-size: 1.8rem;
-    padding: 0.5rem;
-    gap: 0.6rem;
+    font-size: 1.7rem;
+    padding: 0.4rem;
+    gap: 0.5rem;
+  }
+
+  .nevigate-date h2 { font-size: 1rem; padding: 0.4rem; }
+
+  .buttons i {
+    width: 2.7rem;
+    height: 2.7rem;
+    font-size: 1.5rem;
   }
 
   .days span {
-    height: 2.8rem;
-    font-size: 0.85rem;
+    height: clamp(2.3rem, 9.5vw, 3rem);
+    font-size: clamp(0.75rem, 3vw, 1rem);
   }
 
   .weekdays span {
-    font-size: 0.65rem;
+    font-size: 0.62rem;
     letter-spacing: 0;
   }
 
-  .view-switcher {
-    gap: 0.3rem;
+  .event-popup { padding: 1rem; gap: 0.9rem; }
+  .event-popup-btn { height: 4.2rem; }
+
+  .event-date-wrapper { min-width: 5rem; width: 35%; }
+  .event-date { font-size: 0.68rem; }
+  .event-time { font-size: 0.82rem; }
+  .event-text { font-size: 0.85rem; }
+
+  .settings-modal { padding: 1rem; border-radius: var(--radius-sm); }
+  .credit-modal-box { padding: 2.2rem 1.4rem; }
+  .credit-author { font-size: 2.4rem; }
+}
+
+/* ================================================================
+   LANDSCAPE PHONE (height < 500px, width > 500px)
+   ================================================================ */
+@media (orientation: landscape) and (max-height: 500px) {
+  .calender-app {
+    /* Side-by-side again in landscape, but compact */
+    grid-template-columns: 1fr 1.4fr;
+    column-gap: 1.5rem;
+    row-gap: 0;
+    width: 99vw;
+    border-radius: var(--radius-md) var(--radius-md) 0 0;
+    padding: 1rem 1.5rem;
+    min-height: unset;
+    border-bottom: none;
   }
 
-  .view-switcher button {
-    padding: 0.7rem;
-    gap: 0;
-    font-size: 0;
+  .events {
+    max-height: calc(100dvh - 2rem);
+    overflow-y: auto;
+    padding: 0.5rem 0;
   }
 
-  .view-switcher button i {
-    font-size: 1.6rem;
-  }
-
-  .nevigate-date h2 {
-    font-size: 1rem;
+  .heading {
+    font-size: 1.8rem;
     padding: 0.4rem;
   }
 
-  .buttons i {
-    width: 2.6rem;
-    height: 2.6rem;
-    font-size: 1.4rem;
+  .nevigate-date { margin: 0.8rem 0; }
+  .nevigate-date h2 { font-size: 1.1rem; }
+
+  .weekdays { margin: 0.6rem 0 0.3rem; }
+  .weekdays span { font-size: 0.75rem; }
+
+  .days span {
+    height: 2.5rem;
+    margin-bottom: 0.3rem;
+    font-size: 0.85rem;
   }
 
+  .view-switcher button {
+    font-size: 0;
+    padding: 0.5rem 0.8rem;
+  }
+
+  .view-switcher button i { font-size: 1.4rem; }
+
+  /* Popup in landscape: wider, shorter */
   .event-popup {
-    padding: 1.2rem;
-    gap: 1rem;
+    max-height: min(95dvh, 95vh);
+    width: min(90vw, 60rem);
   }
 
-  .event-date-wrapper {
-    width: 30%;
-  }
-
-  .event-date {
-    padding-left: 0.5rem;
-    font-size: 0.8rem;
-  }
-
-  .event-time {
-    font-size: 0.9rem;
-    line-height: 2rem;
-  }
-
-  .event-text {
-    font-size: 0.9rem;
-    padding: 0 2rem 0 0.5rem;
-  }
-
-  .event-buttons i {
-    font-size: 1.3rem;
-  }
-
-  .settings-modal {
-    padding: 1.2rem;
-    gap: 1rem;
-    border-radius: 1.2rem;
+  .event-popup-backdrop {
+    align-items: flex-start;
+    padding-top: 0.5rem;
   }
 }
 
 /* ================================================================
-   Credit Modal Styles
+   PRINT STYLES
    ================================================================ */
-.credit-modal-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(5px);
-  z-index: 10000;
-  display: flex;
-  justify-content: flex-end;
-  align-items: flex-end;
-  padding: 3rem;
-  animation: fadeInModal 0.5s ease-out;
-}
-
-@keyframes fadeInModal {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-.credit-modal-box {
-  position: relative;
-  z-index: 1;
-  background: #1e242d;
-  background-clip: padding-box;
-  padding: 4rem;
-  border-radius: 2rem;
-  text-align: center;
-  color: #fff;
-  width: min(500px, 100%);
-  box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-  border: 5px solid transparent;
-  overflow: hidden;
-}
-
-/* RGB Border Effect */
-.credit-modal-box::before {
-  content: '';
-  position: absolute;
-  top: -5px; right: -5px; bottom: -5px; left: -5px;
-  z-index: -1;
-  border-radius: 2rem;
-  background: linear-gradient(60deg, #f79533, #f37055, #ef4e7b, #a166ab, #5073b8, #1098ad, #07b39b, #6fba82);
-  background-size: 300% 300%;
-  animation: animatedgradient 3s ease alternate infinite;
-}
-
-@keyframes animatedgradient {
-  0%   { background-position: 0% 50%; }
-  50%  { background-position: 100% 50%; }
-  100% { background-position: 0% 50%; }
-}
-
-.credit-icon {
-  font-size: 5rem;
-  margin-bottom: 2rem;
-  background: linear-gradient(45deg, #00a3ff, #ef9011);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  filter: drop-shadow(0 0 10px rgba(0, 163, 255, 0.3));
-}
-
-.credit-text {
-  font-family: var(--font-body);
-  font-size: 1.6rem;
-  color: #a0aec0;
-  margin-bottom: 1rem;
-  line-height: 1.5;
-}
-
-.credit-author {
-  font-family: var(--font-heading);
-  font-size: 4rem;
-  background: linear-gradient(to right, #fff, #a0aec0);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-bottom: 2rem;
-  letter-spacing: 2px;
-}
-
-.credit-github {
-  display: inline-flex;
-  align-items: center;
-  gap: 1rem;
-  background: #0d1117;
-  padding: 1rem 2rem;
-  border-radius: 50px;
-  text-decoration: none;
-  color: #fff;
-  font-family: var(--font-mono);
-  font-size: 1.4rem;
-  border: 1px solid #30363d;
-  transition: all 0.3s ease;
-}
-
-.credit-github:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-  border-color: #ef9011;
-}
-
-.credit-github i {
-  font-size: 2rem;
-}
-
-.credit-close-btn {
-  position: absolute;
-  top: 1.5rem;
-  right: 1.5rem;
-  background: none;
-  border: none;
-  color: #4a5568;
-  font-size: 2.5rem;
-  cursor: pointer;
-  transition: color 0.3s;
-  padding: 0.5rem;
-}
-
-.credit-close-btn:hover {
-  color: #fff;
-}
-
-@media (max-width: 600px) {
-  .credit-modal-overlay {
-    padding: 1.5rem;
-    justify-content: center;
-    align-items: flex-end;
+@media print {
+  .calender-app {
+    width: 100%;
+    border: none;
+    box-shadow: none;
+    grid-template-columns: 1fr 1fr;
+    border-radius: 0;
   }
 
-  .credit-modal-box {
-    padding: 3rem 2rem;
-    border-radius: 1.5rem;
-  }
+  .calender-app::after { display: none; }
+  .event-popup,
+  .settings-overlay,
+  .toast-notification,
+  .credit-modal-overlay { display: none; }
 
-  .credit-icon {
-    font-size: 4rem;
-    margin-bottom: 1.5rem;
-  }
+  .events { max-height: none; overflow: visible; }
+}
 
-  .credit-text {
-    font-size: 1.4rem;
-  }
-
-  .credit-author {
-    font-size: 3rem;
-    letter-spacing: 1px;
-  }
-
-  .credit-github {
-    font-size: 1.2rem;
-    padding: 0.8rem 1.5rem;
+/* ================================================================
+   HIGH CONTRAST / REDUCED MOTION
+   ================================================================ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
   }
 }
