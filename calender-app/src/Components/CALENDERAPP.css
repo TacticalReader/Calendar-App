@@ -167,7 +167,6 @@
   padding: 0.45rem;
   border-radius: var(--radius-md);
   flex-shrink: 0;
-  /* Allow wrap if headers get tight */
   flex-wrap: nowrap;
 }
 
@@ -308,7 +307,7 @@
   display: flex;
   width: 300%;
   height: 100%;
-  touch-action: pan-y; /* allow vertical scroll, intercept only horizontal */
+  touch-action: pan-y;
 }
 
 .days-grid-slide {
@@ -350,7 +349,6 @@
   backface-visibility: hidden;
   font-family: var(--font-mono);
   border-radius: var(--radius-full);
-  /* Ensure cells are at least touch-friendly */
   min-height: 3rem;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
@@ -402,7 +400,6 @@
   width: 100%;
   min-width: 0;
   height: 100%;
-  /* Scroll within the panel itself on desktop */
   max-height: clamp(40rem, 75vh, 80rem);
   overflow-y: auto;
   overflow-x: hidden;
@@ -462,7 +459,6 @@
   margin-bottom: 1.8rem;
   position: relative;
   flex-shrink: 0;
-  /* Subtle entrance animation */
   animation: fadeIn 0.3s ease;
 }
 
@@ -471,7 +467,6 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  /* min-width instead of %-width for more flexibility */
   min-width: 8rem;
   width: 30%;
   flex-shrink: 0;
@@ -527,7 +522,6 @@
   font-size: 1.6rem;
   color: var(--color-text);
   cursor: pointer;
-  /* Touch-friendly */
   min-width: 2.8rem;
   min-height: 2.8rem;
   display: flex;
@@ -552,7 +546,6 @@
   justify-content: center;
   align-items: center;
   padding: 1.5rem;
-  /* Account for notched phones / virtual keyboard */
   padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
   animation: fadeIn 0.2s ease;
 }
@@ -561,7 +554,6 @@
   background-color: var(--color-bg-elevated);
   width: clamp(30rem, min(92vw, 50rem), 50rem);
   height: auto;
-  /* Use dvh for reliable viewport height on mobile (accounts for browser chrome) */
   max-height: min(90dvh, 90vh);
   overflow-y: auto;
   padding: var(--space-xl);
@@ -575,7 +567,6 @@
   border: 1px solid var(--color-border);
   animation: popupScale 0.35s var(--ease-out-expo) forwards;
   position: relative;
-  /* Standalone (no backdrop wrapper) fallback */
   margin: auto;
 }
 
@@ -1103,7 +1094,6 @@
    ================================================================ */
 @media (max-width: 1050px) {
   .calender-app {
-    /* Slightly more even split as space tightens */
     grid-template-columns: 1fr 1.6fr;
     column-gap: 2rem;
     padding: 2rem;
@@ -1128,7 +1118,6 @@
    ================================================================ */
 @media (max-width: 900px) {
   .calender-app {
-    /* Stack panels vertically */
     grid-template-columns: 1fr;
     row-gap: 2rem;
     width: min(96vw, 68rem);
@@ -1140,14 +1129,29 @@
 
   .calender-app::after { display: none; }
 
-  /* Calendar panel takes full width */
   .calender { width: 100%; }
 
-  /* Events panel: horizontal scroll for large screens, vertical list on small */
   .events {
     width: 100%;
-    max-height: 45vh;
+    /* FIX: Taller events panel so cards aren't clipped awkwardly */
+    max-height: none;
+    /* FIX: Fade hint so users know it scrolls */
+    position: relative;
     padding: var(--space-sm) 0;
+  }
+
+  /* FIX: Scroll-fade hint at bottom of events panel */
+  .events::after {
+    content: '';
+    position: sticky;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 3rem;
+    background: linear-gradient(to bottom, transparent, var(--color-bg));
+    pointer-events: none;
+    flex-shrink: 0;
+    display: block;
   }
 
   .heading {
@@ -1185,7 +1189,6 @@
     padding: var(--space-lg);
   }
 
-  /* View switcher: show icons only to save space */
   .view-switcher button {
     font-size: clamp(1rem, 2.5vw, 1.3rem);
     padding: 0.7rem 1rem;
@@ -1204,9 +1207,8 @@
     row-gap: 1.5rem;
   }
 
-  /* Two-event horizontal layout for wider phone landscape */
   .events {
-    max-height: 50vh;
+    max-height: none;
   }
 
   .event-popup {
@@ -1237,12 +1239,11 @@
 @media (max-width: 600px) {
   .calender-app {
     width: 100vw;
-    /* Edge to edge on small phones */
     border-radius: 1.5rem 1.5rem 0 0;
+    /* FIX: Full 4-sided border — no more broken 3-sided look */
     border-width: 0.3rem;
+    border-bottom: 0.3rem solid var(--color-border-deep);
     padding: 1.5rem;
-    /* Align to bottom of screen */
-    border-bottom: none;
   }
 
   .calender-header {
@@ -1255,11 +1256,56 @@
     padding: 0.5rem 0.7rem;
   }
 
-  /* On narrow screens, hide text labels in view switcher */
-  .view-switcher button span,
-  .view-switcher button > *:not(i) {
-    /* Keep text but let it shrink */
-    font-size: clamp(0.9rem, 2.5vw, 1.2rem);
+  /* ── FIX: View switcher — full-width pill strip, always shows text ── */
+  .view-switcher {
+    width: 100%;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    border-radius: var(--radius-md);
+    /* FIX: Higher contrast background so it reads clearly on dark bg */
+    background-color: #222a35;
+    border: 1px solid rgba(255,255,255,0.07);
+  }
+
+  .view-switcher button {
+    flex: 1;
+    justify-content: center;
+    /* FIX: Keep text visible — no font-size:0 hack */
+    font-size: 1.1rem;
+    padding: 0.75rem 0.5rem;
+    gap: 0.5rem;
+    border-radius: 0.6rem;
+    min-height: 4rem;
+    letter-spacing: 0.02rem;
+  }
+
+  .view-switcher button i {
+    font-size: 1.4rem;
+    flex-shrink: 0;
+  }
+
+  /* FIX: Active state — full pill highlight, not just a smudge */
+  .view-switcher button.active {
+    background-color: var(--color-accent);
+    color: #fff;
+    box-shadow: 0 2px 10px var(--color-accent-dim);
+  }
+
+  /* FIX: Inactive buttons get a subtle hover so they feel tappable */
+  .view-switcher button:not(.active):hover {
+    background-color: rgba(255,255,255,0.07);
+    color: var(--color-text);
+  }
+
+  /* ── Combine the two calender-header rows into one readable block ── */
+  /* Title row: push settings btn to far right cleanly */
+  .calender-header:first-of-type {
+    margin-bottom: 0.8rem;
+  }
+
+  /* View switcher row: give it a bit more breathing room */
+  .calender-header:last-of-type {
+    margin-bottom: 0.5rem;
   }
 
   .nevigate-date {
@@ -1291,14 +1337,17 @@
     font-size: clamp(0.75rem, 2.3vw, 1.05rem);
   }
 
+  /* FIX: Square day cells — equal width/height so today circle stays round */
   .days span {
-    height: clamp(2.8rem, 8vw, 3.6rem);
+    /* Use aspect-ratio instead of fixed height so circle stays perfect */
+    height: auto;
+    aspect-ratio: 1 / 1;
     margin-bottom: 0.4rem;
     font-size: clamp(0.85rem, 2.8vw, 1.2rem);
   }
 
   .events {
-    max-height: 40vh;
+    max-height: none;
     padding: 0.5rem 0;
   }
 
@@ -1328,6 +1377,7 @@
 
   .event-buttons i { font-size: 1.45rem; }
 
+  /* FIX: Time picker — single tight row that never wraps messily */
   .event-popup {
     width: min(98vw, 50rem);
     padding: 1.5rem;
@@ -1336,15 +1386,35 @@
     border-radius: var(--radius-lg);
   }
 
-  .event-popup-time {
-    font-size: clamp(1.3rem, 4vw, 1.8rem);
-    width: clamp(3.5rem, 8vw, 5rem);
+  /* FIX: Time picker row — fixed widths so it never overflows or orphans */
+  .time-input {
+    gap: 0.5rem;
+    flex-wrap: nowrap;
+    justify-content: center;
   }
 
-  .time-input input,
+  .event-popup-time {
+    font-size: 1.5rem;
+    width: 4rem;
+    padding: 0.5rem;
+    flex-shrink: 0;
+  }
+
+  .time-input input {
+    width: 4rem;
+    font-size: 1.4rem;
+    flex-shrink: 0;
+  }
+
   .time-input select {
-    width: clamp(3.8rem, 7.5vw, 5.5rem);
-    font-size: clamp(1.2rem, 3.8vw, 1.6rem);
+    width: 5.2rem;
+    font-size: 1.3rem;
+    flex-shrink: 0;
+  }
+
+  .time-input span {
+    font-size: 1.6rem;
+    flex-shrink: 0;
   }
 
   .event-popup textarea {
@@ -1374,21 +1444,24 @@
     font-size: 1.25rem;
   }
 
+  /* FIX: Credit modal — compact, centered, not bottom-anchored on small screens */
   .credit-modal-overlay {
-    padding: 1.2rem;
+    padding: 1.5rem;
     justify-content: center;
-    align-items: flex-end;
-    padding-bottom: max(1.2rem, env(safe-area-inset-bottom));
+    align-items: center;
+    padding-bottom: max(1.5rem, env(safe-area-inset-bottom));
   }
 
   .credit-modal-box {
-    padding: 2.8rem 1.8rem;
+    padding: 2.4rem 2rem;
     border-radius: var(--radius-lg);
+    /* FIX: Smaller so it doesn't dominate the screen */
+    width: min(92vw, 38rem);
   }
 
-  .credit-icon { font-size: 3.8rem; margin-bottom: 1.4rem; }
-  .credit-text { font-size: 1.35rem; }
-  .credit-author { font-size: 2.8rem; letter-spacing: 1px; }
+  .credit-icon { font-size: 3.4rem; margin-bottom: 1.2rem; }
+  .credit-text { font-size: 1.3rem; }
+  .credit-author { font-size: 2.6rem; letter-spacing: 1px; margin-bottom: 1.4rem; }
   .credit-github { font-size: 1.2rem; padding: 0.8rem 1.4rem; }
 }
 
@@ -1408,21 +1481,22 @@
     gap: 0.6rem;
   }
 
-  /* At this width: text labels in view switcher hidden, icons only */
+  /* FIX: View switcher — tighter but still shows icon + text */
   .view-switcher {
-    gap: 0.3rem;
+    gap: 0.4rem;
     padding: 0.4rem;
   }
 
   .view-switcher button {
-    padding: 0.65rem 0.85rem;
-    gap: 0;
-    /* Text hidden via font-size:0 trick but keeping icon */
-    font-size: 0;
+    /* FIX: Keep text labels — shrink font instead of nuking it */
+    font-size: 1rem;
+    padding: 0.65rem 0.4rem;
+    gap: 0.35rem;
+    min-height: 3.8rem;
   }
 
   .view-switcher button i {
-    font-size: 1.65rem;
+    font-size: 1.35rem;
   }
 
   .nevigate-date h2 {
@@ -1442,8 +1516,10 @@
     font-size: 1.7rem;
   }
 
+  /* FIX: Keep aspect-ratio squares at this size too */
   .days span {
-    height: clamp(2.5rem, 9vw, 3.2rem);
+    height: auto;
+    aspect-ratio: 1 / 1;
     margin-bottom: 0.3rem;
     font-size: clamp(0.8rem, 3vw, 1.1rem);
   }
@@ -1481,6 +1557,7 @@
     padding: 1rem;
     border-radius: 1rem 1rem 0 0;
     border-width: 0.2rem;
+    border-bottom: 0.2rem solid var(--color-border-deep);
     row-gap: 1rem;
   }
 
@@ -1488,6 +1565,18 @@
     font-size: 1.7rem;
     padding: 0.4rem;
     gap: 0.5rem;
+  }
+
+  /* FIX: At 375px — icon + very short text label, still readable */
+  .view-switcher button {
+    font-size: 0.9rem;
+    padding: 0.6rem 0.3rem;
+    gap: 0.3rem;
+    min-height: 3.6rem;
+  }
+
+  .view-switcher button i {
+    font-size: 1.25rem;
   }
 
   .nevigate-date h2 { font-size: 1rem; padding: 0.4rem; }
@@ -1498,8 +1587,10 @@
     font-size: 1.5rem;
   }
 
+  /* FIX: Aspect-ratio squares on the smallest screens */
   .days span {
-    height: clamp(2.3rem, 9.5vw, 3rem);
+    height: auto;
+    aspect-ratio: 1 / 1;
     font-size: clamp(0.75rem, 3vw, 1rem);
   }
 
@@ -1517,8 +1608,11 @@
   .event-text { font-size: 0.85rem; }
 
   .settings-modal { padding: 1rem; border-radius: var(--radius-sm); }
-  .credit-modal-box { padding: 2.2rem 1.4rem; }
-  .credit-author { font-size: 2.4rem; }
+
+  /* FIX: Credit modal compact on 375px */
+  .credit-modal-box { padding: 2rem 1.4rem; width: min(96vw, 34rem); }
+  .credit-author { font-size: 2.2rem; }
+  .credit-text { font-size: 1.2rem; }
 }
 
 /* ================================================================
@@ -1526,7 +1620,6 @@
    ================================================================ */
 @media (orientation: landscape) and (max-height: 500px) {
   .calender-app {
-    /* Side-by-side again in landscape, but compact */
     grid-template-columns: 1fr 1.4fr;
     column-gap: 1.5rem;
     row-gap: 0;
@@ -1534,7 +1627,7 @@
     border-radius: var(--radius-md) var(--radius-md) 0 0;
     padding: 1rem 1.5rem;
     min-height: unset;
-    border-bottom: none;
+    border-bottom: 0.2rem solid var(--color-border-deep);
   }
 
   .events {
@@ -1554,18 +1647,28 @@
   .weekdays { margin: 0.6rem 0 0.3rem; }
   .weekdays span { font-size: 0.75rem; }
 
+  /* FIX: Keep square cells in landscape too */
   .days span {
-    height: 2.5rem;
+    height: auto;
+    aspect-ratio: 1 / 1;
     margin-bottom: 0.3rem;
     font-size: 0.85rem;
   }
 
-  .view-switcher button {
-    font-size: 0;
-    padding: 0.5rem 0.8rem;
+  /* FIX: In landscape, view switcher stays readable — no icon-only */
+  .view-switcher {
+    gap: 0.3rem;
+    padding: 0.35rem;
   }
 
-  .view-switcher button i { font-size: 1.4rem; }
+  .view-switcher button {
+    font-size: 1rem;
+    padding: 0.5rem 0.7rem;
+    gap: 0.4rem;
+    min-height: 3.4rem;
+  }
+
+  .view-switcher button i { font-size: 1.3rem; }
 
   /* Popup in landscape: wider, shorter */
   .event-popup {
